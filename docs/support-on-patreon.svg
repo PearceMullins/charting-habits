@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="238" height="54" viewBox="0 0 238 54">
+  <title>Support on Patreon</title>
+  <rect width="238" height="54" rx="11" fill="#ff8075"/>
+  <text x="19" y="33" fill="#24110f" font-family="Arial, sans-serif" font-size="18" font-weight="700">Support on Patreon</text>
+  <path d="M201 20h13v13m0-13-15 15" fill="none" stroke="#24110f" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+</svg>
