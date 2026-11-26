@@ -1,0 +1,1624 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#050505">
+  <title>Charting Habits</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --page: #050505;
+      --paper: #101010;
+      --raised: #171717;
+      --ink: #f1f3f2;
+      --muted: #afb8b4;
+      --line: #353535;
+      --control-line: #686868;
+      --accent: #71aaff;
+      --accent-hover: #95bfff;
+      --accent-ink: #000;
+      --accent-hover-ink: #000;
+      --accent-border: #71aaff;
+      --accent-readable: #95bfff;
+      --accent-dark: #1c283b;
+      --selected-ink: #95bfff;
+      --warning: #f1be89;
+      --radius: 18px;
+      font-family: "Segoe UI", system-ui, sans-serif;
+      color: var(--ink);
+      background: var(--page);
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    [hidden] { display: none !important; }
+    body { margin: 0; min-width: 280px; }
+    button, input, select { font: inherit; }
+    button { cursor: pointer; }
+    button:disabled { cursor: default; opacity: .45; }
+    :focus-visible { outline: 3px solid var(--accent-readable); outline-offset: 3px; }
+    h1, h2, p { margin: 0; }
+    h1, h2 { font-family: Georgia, serif; font-weight: 500; letter-spacing: -.045em; }
+    h1 { font-size: clamp(2.4rem, 5vw, 4.5rem); line-height: 1; overflow-wrap: anywhere; }
+    h2 { font-size: 1.85rem; line-height: 1.1; }
+    .skip { position: absolute; top: -80px; left: 16px; padding: 12px; background: var(--paper); color: var(--accent-readable); }
+    .skip:focus { top: 12px; z-index: 3; }
+    .site-header { border-bottom: 1px solid var(--line); }
+    .header-inner {
+      width: min(1220px, calc(100% - 56px));
+      min-height: 74px;
+      margin: auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+    }
+    .brand { display: flex; align-items: center; gap: 10px; font: 600 1.35rem Georgia, serif; }
+    .brand-mark {
+      display: flex;
+      align-items: end;
+      gap: 3px;
+      padding: 8px;
+      width: 33px;
+      height: 33px;
+      border-radius: 10px;
+      background: var(--accent-dark);
+    }
+    .brand-mark i { background: var(--selected-ink); width: 4px; height: 6px; border-radius: 1px; }
+    .brand-mark i:nth-child(2) { height: 10px; }
+    .brand-mark i:nth-child(3) { height: 16px; }
+    .actions, .segment, .date-actions, .entry-actions, .chart-controls, .day-nav, .switcher {
+      display: flex; align-items: center; flex-wrap: wrap; gap: 8px;
+    }
+    .button, .segment button {
+      min-height: 42px;
+      padding: 8px 13px;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      background: var(--paper);
+      color: var(--ink);
+      font-size: .89rem;
+      font-weight: 650;
+      line-height: 1.2;
+    }
+    .button:not(:disabled):hover, .segment button:hover { border-color: var(--accent-readable); background: var(--accent-dark); }
+    .button.primary { color: var(--accent-ink); background: var(--accent); border-color: var(--accent-border); }
+    .button.primary:not(:disabled):hover { color: var(--accent-hover-ink); background: var(--accent-hover); }
+    .button.primary:disabled { color: var(--muted); background: var(--raised); border-color: var(--line); opacity: 1; }
+    .button.quiet { border-color: transparent; background: transparent; color: var(--accent-readable); }
+    .button.quiet:not(:disabled):hover, .data-menu[open] summary { color: var(--selected-ink); }
+    .button.danger { color: #230d0a; background: #f3a698; border-color: #f3a698; }
+    .button.danger:not(:disabled):hover { color: #230d0a; background: #ffc5ba; border-color: #ffc5ba; }
+    .icon { min-width: 42px; padding-inline: 9px; font-size: 1.18rem; }
+    .data-menu { position: relative; }
+    .header-inner .actions { flex: none; flex-wrap: nowrap; }
+    .data-menu summary { display: flex; align-items: center; gap: 6px; list-style: none; cursor: pointer; }
+    .data-menu summary::-webkit-details-marker { display: none; }
+    .data-menu[open] summary { background: var(--accent-dark); }
+    .menu {
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
+      min-width: 175px;
+      z-index: 2;
+      padding: 6px;
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      box-shadow: 0 12px 30px #0009;
+    }
+    .menu button { width: 100%; text-align: left; }
+    .workspace { width: min(1220px, calc(100% - 56px)); margin: 34px auto 64px; }
+    .workspace-bar { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 18px; }
+    .workspace-tools { justify-content: flex-end; }
+    .range-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 12px; }
+    .range-bar label { font-size: .89rem; font-weight: 650; }
+    .range-bar input { width: min(100%, 11ch); }
+    .segment { width: max-content; max-width: 100%; padding: 3px; background: var(--raised); border-radius: 11px; gap: 2px; }
+    .segment button { min-height: 38px; border: 1px solid transparent; background: transparent; }
+    .segment button[aria-pressed="true"] {
+      background: var(--accent-dark); border-color: var(--control-line); color: var(--selected-ink);
+    }
+    .status { color: var(--muted); display: flex; align-items: center; gap: 7px; font-size: .82rem; }
+    .status::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--accent-readable); }
+    .status.warning::before { background: var(--warning); }
+    .notice {
+      padding: 12px 15px; margin-bottom: 16px; border: 1px solid var(--warning-line, #6f4b2d); border-radius: 10px;
+      color: var(--warning-text, #f1be89); background: var(--warning-paper, #261b13); font-size: .91rem;
+    }
+    .dashboard { display: grid; grid-template-columns: minmax(175px, 228px) minmax(0, 1fr); gap: 20px; align-items: start; }
+    .surface { background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); }
+    .sidebar { padding: 18px 14px 14px; }
+    .sidebar h2 { font-family: inherit; font-size: .96rem; font-weight: 700; letter-spacing: 0; margin: 0 7px 14px; }
+    .habit-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 5px; }
+    .habit-list button {
+      display: flex; align-items: center; gap: 10px; width: 100%; min-height: 43px; padding: 8px 9px;
+      border: 1px solid transparent; border-radius: 10px; background: transparent; text-align: left; color: var(--ink);
+    }
+    .habit-list button:hover { background: var(--raised); }
+    .habit-list button[aria-pressed="true"] { background: var(--accent-dark); color: var(--selected-ink); border-color: var(--control-line); font-weight: 660; }
+    .habit-list button[aria-pressed="true"] .habit-count { color: var(--selected-ink); }
+    .habit-list .habit-name { min-width: 0; overflow-wrap: anywhere; }
+    .habit-list .habit-count { margin-left: auto; color: var(--muted); font: 600 .78rem "Segoe UI", sans-serif; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--habit, var(--accent)); box-shadow: 0 0 0 1px var(--dot-frame); flex: none; }
+    .sidebar .button { margin-top: 10px; width: 100%; }
+    .sidebar-note { color: var(--muted); margin: 4px 7px 10px; font-size: .86rem; }
+    .hero {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px 22px;
+      padding: 28px 28px 24px;
+    }
+    .hero-copy { min-width: 0; }
+    .eyebrow, .meta, .muted { color: var(--muted); font-size: .89rem; line-height: 1.5; }
+    .eyebrow { margin-bottom: 6px; }
+    .hero-copy .meta { margin-top: 9px; }
+    .hero .actions { flex-shrink: 0; }
+    .log-button { min-height: 51px; padding: 12px 19px; display: flex; align-items: center; gap: 9px; }
+    .log-button span { font-size: 1.4rem; line-height: .8; }
+    .metrics { margin: 0 28px 22px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; border: 1px solid var(--line); border-radius: 13px; background: var(--line); overflow: hidden; }
+    .metric { min-width: 0; padding: 13px 15px 12px; background: var(--raised); }
+    .metric b { display: block; font: 500 clamp(1.45rem, 3vw, 2.1rem) Georgia, serif; overflow-wrap: anywhere; }
+    .metric span { display: block; color: var(--muted); font-size: .78rem; line-height: 1.25; margin-top: 4px; }
+    .chart-heading { padding: 0 28px; display: flex; align-items: center; flex-wrap: wrap; justify-content: space-between; gap: 10px; }
+    .select {
+      min-height: 42px; padding: 7px 9px; border: 1px solid var(--control-line); border-radius: 9px;
+      background: var(--paper); color: var(--ink); font-size: .88rem; font-weight: 620;
+    }
+    .plot { position: relative; margin: 12px 24px 0; }
+    canvas.plot-canvas { display: block; width: 100%; height: clamp(190px, 27vw, 300px); }
+    .plot-canvas.clickable { cursor: crosshair; }
+    .plot-note { margin: 3px 28px 18px; font-size: .84rem; color: var(--muted); }
+    .day-panel {
+      display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 16px;
+      padding: 14px 18px; margin: 0 28px 16px; border: 1px solid var(--line); border-radius: 12px; background: var(--raised);
+    }
+    .day-panel.today-open { background: var(--accent-dark); color: var(--selected-ink); border-color: var(--control-line); }
+    .day-panel.today-open .day-note { color: var(--selected-ink); }
+    .day-summary { font-size: .9rem; font-weight: 650; }
+    .day-note { color: var(--muted); font-size: .81rem; margin-top: 3px; }
+    .day-nav input { border: 1px solid var(--control-line); border-radius: 8px; color: var(--ink); background: var(--paper); min-height: 42px; padding: 6px; font-size: .83rem; }
+    .chart-footer {
+      min-height: 62px; display: flex; align-items: center; flex-wrap: wrap; justify-content: space-between;
+      padding: 9px 28px; gap: 8px; border-top: 1px solid var(--line);
+    }
+    .message { color: var(--muted); font-size: .86rem; }
+    .global-message:not(:empty) { display: block; margin: 12px 0 0; padding: 10px 13px; background: var(--paper); border-radius: 9px; }
+    .legend { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 15px; padding: 0 28px 20px; }
+    .legend span { display: flex; align-items: center; gap: 6px; color: var(--muted); font-size: .85rem; overflow-wrap: anywhere; min-width: 0; }
+    .overview { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 235px), 1fr)); gap: 16px; padding: 0 28px 28px; }
+    .mini {
+      min-width: 0; padding: 16px; text-align: left; border: 1px solid var(--line);
+      border-radius: 13px; background: var(--raised); color: var(--ink);
+    }
+    .mini:hover { border-color: var(--accent-readable); }
+    .mini-title { display: flex; align-items: center; gap: 8px; font-size: .96rem; font-weight: 700; overflow-wrap: anywhere; }
+    .mini canvas { width: 100%; height: 57px; display: block; margin: 10px 0; }
+    .mini .meta { display: block; }
+    .empty { overflow: hidden; }
+    .empty .hero { min-height: 260px; }
+    .empty .hero-copy { max-width: 485px; }
+    .empty .meta { max-width: 38ch; }
+    .empty .hero .button { margin-top: 20px; }
+    .empty-plot { background: var(--raised); border-top: 1px solid var(--line); padding: 18px 26px 10px; }
+    .empty-plot canvas { height: clamp(115px, 22vw, 220px); }
+    .visually-hidden { position: absolute; clip-path: inset(50%); width: 1px; height: 1px; overflow: hidden; white-space: nowrap; }
+    dialog {
+      width: min(465px, calc(100% - 28px)); padding: 22px; background: var(--paper); color: var(--ink);
+      border: 1px solid var(--control-line); border-radius: var(--radius); box-shadow: 0 22px 80px #000b;
+      max-height: calc(100dvh - 28px); overflow: auto;
+    }
+    dialog::backdrop { background: #000b; }
+    dialog .actions { justify-content: flex-end; margin-top: 20px; }
+    dialog .muted { margin-top: 10px; }
+    .form-grid { display: grid; gap: 14px; margin-top: 20px; }
+    .form-grid label { display: grid; gap: 5px; font-size: .9rem; font-weight: 650; }
+    .form-grid input, .form-grid select {
+      width: 100%; min-height: 42px; padding: 7px 10px; border: 1px solid var(--control-line); border-radius: 8px; color: var(--ink); background: var(--raised);
+    }
+    .fields { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .color-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .form-grid .color-picker { padding: 5px; cursor: pointer; }
+    .color-picker::-webkit-color-swatch { border: 1px solid var(--control-line); border-radius: 4px; }
+    .color-picker::-moz-color-swatch { border: 1px solid var(--control-line); border-radius: 4px; }
+    .hex-input { font-family: ui-monospace, "Cascadia Mono", monospace; }
+    @media (max-width: 820px) {
+      .header-inner, .workspace { width: calc(100% - 30px); }
+      .workspace { margin-top: 20px; }
+      .dashboard { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+      .sidebar { display: none; }
+      .switcher { width: min(100%, 280px); margin-bottom: 14px; }
+      .switcher select { width: 100%; }
+    }
+    @media (min-width: 821px) { .switcher { display: none; } }
+    @media (max-width: 550px) {
+      .header-inner { min-height: 64px; }
+      .brand { font-size: 1.09rem; gap: 7px; }
+      .brand-mark { width: 30px; height: 30px; padding: 7px; }
+      .header-inner .actions { gap: 4px; }
+      .workspace-bar { flex-wrap: wrap; }
+      .hero { padding: 22px 16px 17px; align-items: flex-start; flex-wrap: wrap; }
+      .hero .actions { flex-shrink: 1; }
+      .metrics { margin: 0 16px 16px; }
+      .metric { padding-inline: 8px; }
+      .chart-heading { padding: 0 16px; }
+      .plot { margin-inline: 10px; }
+      .plot-note { margin-inline: 16px; }
+      .day-panel { margin-inline: 16px; padding: 11px; }
+      .date-actions, .entry-actions { width: 100%; }
+      .entry-actions .button { flex: 1 0 auto; }
+      .chart-footer, .legend, .overview { padding-inline: 16px; }
+    }
+    @media (max-width: 370px) {
+      .header-inner { gap: 7px; }
+      .header-inner .button { padding-inline: 8px; font-size: .8rem; }
+      .brand { font-size: .99rem; }
+    }
+    @media (max-width: 325px) {
+      .brand-mark { display: none; }
+    }
+    @media (prefers-reduced-motion: no-preference) {
+      .day-panel.today-open { animation: today 2.25s ease-in-out 2; }
+      @keyframes today { 50% { box-shadow: 0 0 0 3px var(--pulse, #71aaff30); } }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip" href="#content">Skip to tracker</a>
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="brand"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>Charting Habits</div>
+      <div class="actions">
+        <button class="button primary add-habit" type="button">+ New habit</button>
+        <details class="data-menu" id="data-menu">
+          <summary class="button">Data <span aria-hidden="true">⌄</span></summary>
+          <div class="menu">
+            <button class="button quiet" id="export-backup" type="button">Export backup</button>
+            <button class="button quiet" id="restore-backup" type="button">Restore backup</button>
+          </div>
+        </details>
+        <input id="backup-file" type="file" accept=".json,application/json" hidden>
+      </div>
+    </div>
+  </header>
+  <main id="content" class="workspace">
+    <div class="workspace-bar">
+      <div class="segment" id="screen-tabs" role="group" aria-label="Tracker view">
+        <button type="button" data-screen="habit" aria-pressed="true">Tracker</button>
+        <button type="button" data-screen="overview" aria-pressed="false">Overview</button>
+        <button type="button" data-screen="compare" aria-pressed="false">Compare habits</button>
+      </div>
+      <div class="actions workspace-tools">
+        <p class="status" id="storage-status">Saved on this browser</p>
+        <button class="button" id="open-theme" type="button">Theme</button>
+      </div>
+    </div>
+    <p class="notice" id="storage-warning" hidden></p>
+    <div class="dashboard">
+      <aside class="sidebar surface" aria-labelledby="habit-list-label">
+        <h2 id="habit-list-label">Your habits</h2>
+        <p class="sidebar-note" id="sidebar-note">Habits you create appear here.</p>
+        <ul class="habit-list" id="habit-list"></ul>
+        <button class="button quiet add-habit" type="button">+ Add habit</button>
+      </aside>
+      <div>
+        <div class="switcher" id="mobile-switch" hidden>
+          <label class="visually-hidden" for="habit-select">Switch habit</label>
+          <select class="select" id="habit-select"></select>
+        </div>
+        <section class="empty surface" id="empty-view">
+          <div class="hero">
+            <div class="hero-copy">
+              <h1>See your habits grow.</h1>
+              <p class="meta">Create a habit, then log each completion with a tap.</p>
+              <button class="button primary add-habit" type="button">Create your first habit</button>
+            </div>
+          </div>
+          <div class="empty-plot"><canvas class="plot-canvas" id="preview" aria-hidden="true"></canvas></div>
+        </section>
+        <section class="surface" id="habit-view" hidden aria-labelledby="habit-title">
+          <div class="hero">
+            <div class="hero-copy">
+              <p class="eyebrow" id="today-date"></p>
+              <h1 id="habit-title"></h1>
+              <p class="meta" id="habit-meta"></p>
+            </div>
+            <div class="actions">
+              <button type="button" class="button primary log-button" id="log-today"><span aria-hidden="true">+</span> Log today</button>
+              <button type="button" class="button quiet" id="edit-habit">Edit habit</button>
+            </div>
+          </div>
+          <div class="metrics">
+            <div class="metric"><b id="metric-total">0</b><span>Total completions</span></div>
+            <div class="metric"><b id="metric-streak">0</b><span>Current streak</span></div>
+            <div class="metric"><b id="metric-month">0</b><span>Days logged this month</span></div>
+          </div>
+          <div class="chart-heading">
+            <h2>Progress</h2>
+            <div class="chart-controls">
+              <label class="visually-hidden" for="chart-type">Chart style</label>
+              <select class="select" id="chart-type">
+                <option value="step">Step line</option>
+                <option value="line">Line with dots</option>
+                <option value="daily">Daily bars</option>
+                <option value="weekly">Weekly bars</option>
+                <option value="periods">Compare months</option>
+              </select>
+              <div class="segment" id="range-tabs" role="group" aria-label="Date range">
+                <button type="button" data-range="7" aria-pressed="false">7 days</button>
+                <button type="button" data-range="30" aria-pressed="true">30 days</button>
+              </div>
+            </div>
+          </div>
+          <div class="plot"><canvas class="plot-canvas" id="habit-chart" role="img"></canvas></div>
+          <p class="plot-note" id="chart-note"></p>
+          <div class="legend" id="chart-legend" hidden></div>
+          <section class="day-panel" id="day-panel" aria-label="Edit completions by date">
+            <div>
+              <p class="day-summary" id="day-summary"></p>
+              <p class="day-note" id="day-note"></p>
+            </div>
+            <div class="date-actions">
+              <div class="day-nav">
+                <button class="button icon" type="button" id="previous-day" aria-label="Previous day">‹</button>
+                <label class="visually-hidden" for="log-date">Completion date</label>
+                <input type="date" id="log-date">
+                <button class="button icon" type="button" id="next-day" aria-label="Next day">›</button>
+              </div>
+              <div class="entry-actions">
+                <button class="button" type="button" id="remove-entry" aria-label="Remove completion on selected date"><span aria-hidden="true">−</span> Remove</button>
+                <button class="button" type="button" id="add-entry" aria-label="Add completion on selected date"><span aria-hidden="true">+</span> Add</button>
+              </div>
+            </div>
+          </section>
+          <div class="chart-footer">
+            <p class="message" id="chart-message" role="status"></p>
+            <div class="actions">
+              <button class="button quiet" type="button" id="undo" disabled>Undo</button>
+              <button class="button" type="button" id="export-image">Export chart</button>
+            </div>
+          </div>
+        </section>
+        <form class="range-bar" id="overview-range-form" hidden>
+          <label for="overview-range">Days shown</label>
+          <input class="select" id="overview-range" type="number" min="1" max="9007199254740991" step="1" inputmode="numeric" required>
+          <button class="button" type="submit">Apply</button>
+        </form>
+        <section class="surface" id="overview-view" hidden aria-labelledby="overview-title">
+          <div class="hero"><div class="hero-copy">
+            <h1 id="overview-title">Habit overview</h1>
+            <p class="meta" id="overview-period"></p>
+          </div></div>
+          <div class="overview" id="overview-grid"></div>
+        </section>
+        <section class="surface" id="compare-view" hidden aria-labelledby="compare-title">
+          <div class="hero"><div class="hero-copy">
+            <h1 id="compare-title">Compare habits</h1>
+            <p class="meta" id="compare-period"></p>
+          </div></div>
+          <div class="plot"><canvas class="plot-canvas" id="compare-chart" role="img"></canvas></div>
+          <div class="legend" id="compare-legend"></div>
+        </section>
+      </div>
+    </div>
+    <p id="app-status" class="message global-message" role="status"></p>
+  </main>
+  <dialog id="habit-dialog" aria-labelledby="habit-dialog-title">
+    <form id="habit-form">
+      <h2 id="habit-dialog-title">New habit</h2>
+      <div class="form-grid">
+        <label for="name-input">Name
+          <input id="name-input" name="name" required maxlength="80" placeholder="Read, walk, stretch…" autocomplete="off" autofocus>
+        </label>
+        <label for="mode-input">Completions per day
+          <select id="mode-input" name="mode"><option value="binary">One per day</option><option value="counter">Multiple per day</option></select>
+        </label>
+        <div class="fields">
+          <label id="limit-field" for="limit-input" hidden>Daily limit
+            <input id="limit-input" name="limit" type="number" min="1" max="999" placeholder="Optional">
+          </label>
+          <label for="goal-input">Weekly goal
+            <input id="goal-input" name="goal" type="number" min="1" max="999" placeholder="Optional">
+          </label>
+        </div>
+        <div class="color-fields">
+          <label for="color-input">Chart color
+            <input id="color-input" class="color-picker" name="color" type="color" value="#71aaff">
+          </label>
+          <label for="hex-input">Chart hex code
+            <input id="hex-input" class="hex-input" type="text" pattern="#?[0-9A-Fa-f]{6}" maxlength="7" required spellcheck="false" autocomplete="off">
+          </label>
+        </div>
+      </div>
+      <div class="actions">
+        <button class="button quiet" id="cancel-habit" type="button">Cancel</button>
+        <button class="button primary" type="submit" id="save-habit">Create habit</button>
+      </div>
+    </form>
+  </dialog>
+  <dialog id="theme-dialog" aria-labelledby="theme-dialog-title">
+    <form id="theme-form">
+      <h2 id="theme-dialog-title">Theme</h2>
+      <div class="form-grid">
+        <div class="color-fields">
+          <label for="background-input">Background
+            <input id="background-input" class="color-picker" type="color" value="#050505">
+          </label>
+          <label for="background-hex">Background hex code
+            <input id="background-hex" class="hex-input" type="text" pattern="#?[0-9A-Fa-f]{6}" maxlength="7" required spellcheck="false" autocomplete="off">
+          </label>
+        </div>
+        <div class="color-fields">
+          <label for="accent-input">Accent
+            <input id="accent-input" class="color-picker" type="color" value="#71aaff">
+          </label>
+          <label for="accent-hex">Accent hex code
+            <input id="accent-hex" class="hex-input" type="text" pattern="#?[0-9A-Fa-f]{6}" maxlength="7" required spellcheck="false" autocomplete="off">
+          </label>
+        </div>
+      </div>
+      <div class="actions">
+        <button class="button quiet" id="cancel-theme" type="button">Cancel</button>
+        <button class="button primary" type="submit">Save theme</button>
+      </div>
+    </form>
+  </dialog>
+  <dialog id="restore-dialog" aria-labelledby="restore-title">
+    <form method="dialog">
+      <h2 id="restore-title">Replace saved data?</h2>
+      <p class="muted" id="restore-summary"></p>
+      <div class="actions">
+        <button class="button" value="cancel" autofocus>Cancel</button>
+        <button class="button danger" value="restore">Replace with backup</button>
+      </div>
+    </form>
+  </dialog>
+  <script>
+    "use strict";
+    const storageKey = "charting-habits:v1";
+    const format = "charting-habits-backup";
+    const defaultTheme = { background: "#050505", accent: "#71aaff" };
+    const palette = ["#71aaff", "#f2a28c", "#6dd9b2", "#d8a2ee", "#e5cf79", "#a4a6ff"];
+    const chartStyles = ["step", "line", "daily", "weekly", "periods"];
+    const hexColor = /^#[0-9a-f]{6}$/i;
+    const dayMilliseconds = 86400000;
+    const fullDay = new Intl.DateTimeFormat(undefined, {
+      weekday: "long", month: "long", day: "numeric", year: "numeric", timeZone: "UTC"
+    });
+    const shortDay = new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric", timeZone: "UTC" });
+    const longRangeDay = new Intl.DateTimeFormat(undefined, { month: "short", year: "numeric", timeZone: "UTC" });
+    const shortMonth = new Intl.DateTimeFormat(undefined, { month: "short", timeZone: "UTC" });
+    const number = new Intl.NumberFormat();
+    const shortTime = new Intl.DateTimeFormat(undefined, { hour: "numeric", minute: "2-digit" });
+    const emptyData = () => ({
+      habits: [], settings: { selectedId: null, style: "step", range: 30, overviewDays: 30, theme: { ...defaultTheme } }
+    });
+    const get = id => document.getElementById(id);
+
+    let data = emptyData();
+    let screen = "habit";
+    let today = localDay();
+    let selectedDay = today;
+    let undo = null;
+    let storageProblem = "";
+    let unreadableSave = false;
+    let editingId = null;
+    let pendingBackup = null;
+    let chartSelection = null;
+    let chartTheme;
+    let themeKey;
+
+    function channels(color) {
+      return [1, 3, 5].map(offset => parseInt(color.slice(offset, offset + 2), 16));
+    }
+
+    function luminance(color) {
+      const [red, green, blue] = channels(color).map(value => {
+        const channel = value / 255;
+        return channel <= .04045 ? channel / 12.92 : ((channel + .055) / 1.055) ** 2.4;
+      });
+      return .2126 * red + .7152 * green + .0722 * blue;
+    }
+
+    function contrast(first, second) {
+      const a = luminance(first);
+      const b = luminance(second);
+      return (Math.max(a, b) + .05) / (Math.min(a, b) + .05);
+    }
+
+    function textOn(color) {
+      return luminance(color) >= .179 ? "#000000" : "#ffffff";
+    }
+
+    function mixColor(first, second, weight) {
+      const target = channels(second);
+      const mixed = channels(first).map((value, i) => {
+        return Math.round(value + (target[i] - value) * weight).toString(16).padStart(2, "0");
+      });
+      return "#" + mixed.join("");
+    }
+
+    function legibleShade(color, surfaces, ratio) {
+      const ink = textOn(surfaces[0]);
+      for (let step = 0; step < 20; step += 1) {
+        const candidate = mixColor(color, ink, step / 20);
+        if (surfaces.every(surface => contrast(candidate, surface) >= ratio)) return candidate;
+      }
+      return ink;
+    }
+
+    function applyTheme() {
+      const { background, accent } = data.settings.theme;
+      const key = background + accent;
+      if (themeKey === key) return;
+      themeKey = key;
+
+      const brightness = luminance(background);
+      const ink = textOn(background);
+      const light = ink === "#000000";
+      const lift = light ? brightness < .78 : brightness < .042;
+      const touch = lift ? "#ffffff" : "#000000";
+      const paper = mixColor(background, touch, .045);
+      const raised = mixColor(background, touch, .075);
+      const surfaces = [background, paper, raised];
+      const selected = mixColor(paper, accent, .16);
+      const accentReadable = legibleShade(accent, surfaces, 4.5);
+      const muted = legibleShade(mixColor(paper, ink, .68), surfaces, 4.5);
+      const accentHover = mixColor(accent, ink, .12);
+      const rules = {
+        "--page": background, "--paper": paper, "--raised": raised, "--ink": ink, "--muted": muted,
+        "--line": mixColor(paper, ink, .16), "--control-line": legibleShade(paper, surfaces, 3),
+        "--accent": accent, "--accent-hover": accentHover,
+        "--accent-ink": textOn(accent), "--accent-hover-ink": textOn(accentHover),
+        "--accent-border": legibleShade(accent, surfaces, 3), "--accent-readable": accentReadable,
+        "--accent-dark": selected, "--selected-ink": legibleShade(accent, [selected], 4.5),
+        "--pulse": accentReadable + "45",
+        "--warning": light ? "#874317" : "#f1be89",
+        "--warning-paper": light ? "#fff0df" : "#261b13",
+        "--warning-text": light ? "#6b3412" : "#f1be89",
+        "--warning-line": light ? "#be875f" : "#6f4b2d"
+      };
+      const root = document.documentElement;
+      for (const [property, value] of Object.entries(rules)) root.style.setProperty(property, value);
+      root.style.colorScheme = light ? "light" : "dark";
+      document.querySelector('meta[name="color-scheme"]').content = root.style.colorScheme;
+      document.querySelector('meta[name="theme-color"]').content = background;
+
+      chartTheme = {
+        paper, ink, muted, accent, raised,
+        grid: mixColor(paper, ink, .17),
+        guide: legibleShade(paper, [paper], 3),
+        highlight: selected,
+        goal: legibleShade(light ? "#8d481e" : "#e5a87e", [paper], 3.5)
+      };
+    }
+
+    function localDay(date = new Date()) {
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+      return String(date.getFullYear()).padStart(4, "0") + "-" + month + "-" + day;
+    }
+
+    function calendarDate(day) {
+      return new Date(day + "T12:00:00.000Z");
+    }
+
+    function moveDay(day, days) {
+      const timestamp = calendarDate(day).getTime() + dayMilliseconds * days;
+      return new Date(timestamp).toISOString().slice(0, 10);
+    }
+
+    function daysEnding(end, count) {
+      return Array.from({ length: count }, (_, index) => moveDay(end, index + 1 - count));
+    }
+
+    function overviewSpan(count) {
+      const last = calendarDate(today).getTime();
+      const supportedDays = (last - calendarDate("0001-01-01").getTime()) / dayMilliseconds + 1;
+      const days = Math.min(count, supportedDays);
+      const size = Math.min(days, 180);
+      const start = moveDay(today, 1 - days);
+      const formatter = days > 365 ? longRangeDay : shortDay;
+      const labels = Array.from({ length: size }, (_, index) => {
+        const end = moveDay(start, Math.ceil((index + 1) * days / size) - 1);
+        return formatter.format(calendarDate(end));
+      });
+      return { start, days, labels };
+    }
+
+    function overviewSeries(habit, span) {
+      const bins = Array(span.labels.length).fill(0);
+      const start = calendarDate(span.start).getTime();
+      for (const { day } of habit.entries) {
+        if (day < span.start || day > today) continue;
+        const offset = (calendarDate(day).getTime() - start) / dayMilliseconds;
+        bins[Math.floor(offset * bins.length / span.days)] += 1;
+      }
+      let running = 0;
+      return bins.map(count => (running += count));
+    }
+
+    function validOverviewDays(value) {
+      return Number.isSafeInteger(value) && value > 0;
+    }
+
+    function spanLabel(days) {
+      return days === 1 ? "today" : "the last " + number.format(days) + " days";
+    }
+
+    function validDay(day) {
+      if (typeof day !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(day) || day.startsWith("0000")) return false;
+      const parsed = calendarDate(day);
+      return Number.isFinite(parsed.getTime()) && parsed.toISOString().slice(0, 10) === day;
+    }
+
+    function weekStart(day) {
+      return moveDay(day, -((calendarDate(day).getUTCDay() + 6) % 7));
+    }
+
+    function activeHabit() {
+      return data.habits.find(habit => habit.id === data.settings.selectedId) ?? data.habits[0];
+    }
+
+    function dailyCounts(habit) {
+      const counts = new Map();
+      for (const entry of habit.entries) counts.set(entry.day, (counts.get(entry.day) ?? 0) + 1);
+      return counts;
+    }
+
+    function withinLimit(habit, count) {
+      if (habit.mode === "binary") return count === 0;
+      return habit.limit === null || count < habit.limit;
+    }
+
+    function totalIn(habit, start, end) {
+      return habit.entries.filter(entry => entry.day >= start && entry.day <= end).length;
+    }
+
+    function currentStreak(counts) {
+      let date = counts.has(today) ? today : moveDay(today, -1);
+      let streak = 0;
+      while (counts.has(date)) {
+        streak += 1;
+        date = moveDay(date, -1);
+      }
+      return streak;
+    }
+
+    function backupEnvelope() {
+      return { format, version: 1, data };
+    }
+
+    function checkedBackup(raw) {
+      function invalid() {
+        throw new Error("Choose a valid Charting Habits backup file.");
+      }
+      const parsed = JSON.parse(raw);
+      if (parsed?.format !== format || parsed.version !== 1 || !Array.isArray(parsed.data?.habits)) invalid();
+      const ids = new Set();
+      const validOptionalCount = value => value === null || (Number.isInteger(value) && value >= 1 && value <= 999);
+      const habits = parsed.data.habits.map(habit => {
+        if (!habit || typeof habit.id !== "string" || !/^[a-f0-9-]{1,40}$/.test(habit.id) || ids.has(habit.id) ||
+            typeof habit.name !== "string" || !habit.name.trim() || habit.name.length > 80 ||
+            !["binary", "counter"].includes(habit.mode) || !validOptionalCount(habit.limit) ||
+            !validOptionalCount(habit.goal) || typeof habit.color !== "string" || !hexColor.test(habit.color) ||
+            !Array.isArray(habit.entries)) invalid();
+        ids.add(habit.id);
+        const entries = habit.entries.map(entry => {
+          if (!entry || !validDay(entry.day) || !Number.isSafeInteger(entry.at) || !Number.isFinite(new Date(entry.at).getTime())) invalid();
+          return { day: entry.day, at: entry.at };
+        });
+        return {
+          id: habit.id, name: habit.name.trim(), mode: habit.mode,
+          limit: habit.limit, goal: habit.goal, color: habit.color.toLowerCase(), entries
+        };
+      });
+      const settings = parsed.data.settings;
+      if (!settings || !chartStyles.includes(settings.style) || ![7, 30].includes(settings.range) ||
+          (settings.selectedId !== null && !ids.has(settings.selectedId))) invalid();
+      const theme = settings.theme === undefined ? defaultTheme : settings.theme;
+      const overviewDays = settings.overviewDays === undefined ? 30 : settings.overviewDays;
+      if (!validOverviewDays(overviewDays)) invalid();
+      if (!theme || typeof theme.background !== "string" || !hexColor.test(theme.background) ||
+          typeof theme.accent !== "string" || !hexColor.test(theme.accent)) invalid();
+      return {
+        habits,
+        settings: {
+          selectedId: settings.selectedId, style: settings.style, range: settings.range, overviewDays,
+          theme: { background: theme.background.toLowerCase(), accent: theme.accent.toLowerCase() }
+        }
+      };
+    }
+
+    function loadData() {
+      let saved;
+      try {
+        saved = localStorage.getItem(storageKey);
+        if (saved === null) {
+          const probe = storageKey + ":probe";
+          localStorage.setItem(probe, "1");
+          localStorage.removeItem(probe);
+        }
+      } catch {
+        storageProblem = "This browser cannot save this local file. Export a backup before you close it.";
+        return;
+      }
+      if (saved === null) return;
+      try {
+        data = checkedBackup(saved);
+      } catch {
+        unreadableSave = true;
+        storageProblem = "Saved data could not be read and was kept. Restore a valid backup to resume automatic saving.";
+      }
+    }
+
+    function saveData() {
+      if (unreadableSave) return;
+      try {
+        localStorage.setItem(storageKey, JSON.stringify(backupEnvelope()));
+        storageProblem = "";
+      } catch {
+        storageProblem = "This browser could not save your latest changes. Export a backup before you close the file.";
+      }
+    }
+
+    function announce(message) {
+      const liveRegion = get(screen === "habit" && activeHabit() ? "chart-message" : "app-status");
+      liveRegion.textContent = message;
+    }
+
+    function clearMessages() {
+      get("chart-message").textContent = "";
+      get("app-status").textContent = "";
+    }
+
+    function updateToday() {
+      const date = localDay();
+      if (date === today) return false;
+      if (selectedDay === today || selectedDay > date) selectedDay = date;
+      today = date;
+      return true;
+    }
+
+    function changeEntry(day, delta) {
+      updateToday();
+      const habit = activeHabit();
+      if (!habit || !validDay(day) || day > today) return;
+      const count = habit.entries.filter(entry => entry.day === day).length;
+      if (delta > 0) {
+        if (!withinLimit(habit, count)) {
+          render();
+          return;
+        }
+        const entry = { day, at: Date.now() };
+        habit.entries.push(entry);
+        undo = { habitId: habit.id, entry, index: habit.entries.length - 1, added: true };
+      } else {
+        const index = habit.entries.findLastIndex(entry => entry.day === day);
+        if (index === -1) {
+          render();
+          return;
+        }
+        const [entry] = habit.entries.splice(index, 1);
+        undo = { habitId: habit.id, entry, index, added: false };
+      }
+      selectedDay = day;
+      saveData();
+      render();
+      announce((delta > 0 ? "Logged" : "Removed") + " a completion for " + shortDay.format(calendarDate(day)) + ".");
+    }
+
+    function undoChange() {
+      if (!undo) return;
+      const habit = data.habits.find(candidate => candidate.id === undo.habitId);
+      if (!habit) return;
+      if (undo.added) {
+        const index = habit.entries.indexOf(undo.entry);
+        if (index !== -1) habit.entries.splice(index, 1);
+      } else {
+        habit.entries.splice(undo.index, 0, undo.entry);
+      }
+      undo = null;
+      saveData();
+      render();
+      announce("Last change undone.");
+    }
+    function cumulativeSeries(counts, days, start = 0) {
+      let value = start;
+      return days.map(day => {
+        value += counts.get(day) ?? 0;
+        return value;
+      });
+    }
+
+    function habitChart(habit, style, range, counts) {
+      if (style === "weekly") {
+        const start = weekStart(today);
+        const weeks = Array.from({ length: 10 }, (_, i) => moveDay(start, (i - 9) * 7));
+        const values = weeks.map(week => {
+          return daysEnding(moveDay(week, 6), 7).reduce((sum, day) => sum + (day <= today ? counts.get(day) ?? 0 : 0), 0);
+        });
+        return {
+          labels: weeks.map(day => shortDay.format(calendarDate(day))), bars: true,
+          series: [{ color: habit.color, values, start: 0 }], goal: habit.goal,
+          active: 9, note: "Completions per week · Mondays to Sundays",
+          summary: values.at(-1) + " completions this week" + (habit.goal ? " against a goal of " + habit.goal : "")
+        };
+      }
+      if (style === "periods") {
+        const year = calendarDate(today).getUTCFullYear();
+        const monthIndex = calendarDate(today).getUTCMonth();
+        const currentStart = today.slice(0, 7) + "-01";
+        const previousEnd = moveDay(currentStart, -1);
+        const previousStart = previousEnd.slice(0, 7) + "-01";
+        const currentLength = new Date(Date.UTC(year, monthIndex + 1, 0)).getUTCDate();
+        const previousLength = calendarDate(previousEnd).getUTCDate();
+        const length = Math.max(currentLength, previousLength);
+        const currentDays = daysEnding(today, calendarDate(today).getUTCDate());
+        const previousDays = daysEnding(previousEnd, previousLength);
+        const current = cumulativeSeries(counts, currentDays);
+        const previous = cumulativeSeries(counts, previousDays);
+        const previousColor = chartTheme.guide;
+        return {
+          labels: Array.from({ length }, (_, i) => String(i + 1)), active: current.length - 1,
+          series: [
+            { color: previousColor, values: previous, start: 0, dashes: [5, 5] },
+            { color: habit.color, values: current, start: 0 }
+          ],
+          legend: [
+            [shortMonth.format(calendarDate(currentStart)) + " to date", habit.color],
+            [shortMonth.format(calendarDate(previousStart)), previousColor]
+          ],
+          note: "Cumulative completions by day of month",
+          summary: current.at(-1) + " completions this month so far and " + previous.at(-1) + " last month"
+        };
+      }
+      const days = daysEnding(today, range);
+      const bars = style === "daily";
+      const dotted = style === "line";
+      const start = bars ? 0 : habit.entries.filter(entry => entry.day < days[0]).length;
+      const values = bars ? days.map(day => counts.get(day) ?? 0) : cumulativeSeries(counts, days, start);
+      return {
+        days, labels: days.map(day => shortDay.format(calendarDate(day))), bars, dotted,
+        active: days.indexOf(selectedDay), todayIndex: days.length - 1,
+        pendingToday: !counts.has(today), fill: !bars && !dotted,
+        series: [{ color: habit.color, values, start }],
+        note: (bars ? "Completions per day" : "Running total") + " · Select a date on the chart to edit",
+        summary: (bars ? totalIn(habit, days[0], today) + " completions in range" : values.at(-1) + " total completions")
+      };
+    }
+
+    function resizeCanvas(canvas) {
+      const width = canvas.clientWidth;
+      const height = canvas.clientHeight;
+      const ratio = Math.min(2, window.devicePixelRatio || 1);
+      canvas.width = Math.max(1, Math.round(width * ratio));
+      canvas.height = Math.max(1, Math.round(height * ratio));
+      const context = canvas.getContext("2d");
+      context.scale(ratio, ratio);
+      return { context, width, height };
+    }
+
+    function chartScale(model) {
+      const seriesMax = model.series.reduce((max, series) => {
+        return series.values.reduce((highest, value) => Math.max(highest, value), Math.max(max, series.start));
+      }, model.goal ?? 1);
+      const seriesMin = model.bars ? 0 : Math.min(...model.series.map(series => series.start));
+      const gap = Math.max(1, (seriesMax - seriesMin) / 4);
+      const magnitude = 10 ** Math.floor(Math.log10(gap));
+      const tick = [1, 2, 5, 10].find(value => value * magnitude >= gap) * magnitude;
+      return {
+        tick,
+        low: Math.floor(seriesMin / tick) * tick,
+        high: Math.ceil(Math.max(seriesMax, seriesMin + 1) / tick) * tick
+      };
+    }
+
+    function drawChart(context, width, height, model, labelSize = 11) {
+      const settings = chartScale(model);
+      const labels = model.labels.length;
+      const maxLabel = number.format(settings.high);
+      context.font = labelSize + 'px "Segoe UI", sans-serif';
+      const left = Math.max(labelSize * 2.65, context.measureText(maxLabel).width + labelSize);
+      const right = width - labelSize * 1.2;
+      const top = labelSize * 1.1;
+      const bottom = height - labelSize * 2.25;
+      const cell = (right - left) / labels;
+      const x = index => left + (index + .5) * cell;
+      const y = value => bottom - (value - settings.low) * (bottom - top) / (settings.high - settings.low);
+
+      if (model.pendingToday) {
+        context.fillStyle = chartTheme.highlight;
+        context.fillRect(x(model.todayIndex) - cell / 2, top, cell, bottom - top);
+      }
+      context.lineWidth = 1;
+      context.textAlign = "right";
+      context.textBaseline = "middle";
+      for (let tick = settings.low; tick <= settings.high; tick += settings.tick) {
+        const yy = y(tick);
+        context.strokeStyle = chartTheme.grid;
+        context.beginPath();
+        context.moveTo(left, yy);
+        context.lineTo(right, yy);
+        context.stroke();
+        context.fillStyle = chartTheme.muted;
+        context.fillText(number.format(tick), left - 7, yy);
+      }
+      if (model.active >= 0) {
+        context.strokeStyle = chartTheme.guide;
+        context.setLineDash([3, 4]);
+        context.beginPath();
+        context.moveTo(x(model.active), top);
+        context.lineTo(x(model.active), bottom);
+        context.stroke();
+        context.setLineDash([]);
+      }
+
+      for (const series of model.series) {
+        if (model.bars) {
+          drawBars(context, series, cell, x, y, bottom);
+        } else if (model.dotted) {
+          drawDottedLine(context, series, cell, x, y, model.active);
+        } else {
+          drawSteps(context, series, cell, x, y, bottom, model.fill, model.active);
+        }
+      }
+      if (model.goal) {
+        const goalY = y(model.goal);
+        context.strokeStyle = chartTheme.goal;
+        context.setLineDash([5, 4]);
+        context.lineWidth = 1.5;
+        context.beginPath();
+        context.moveTo(left, goalY);
+        context.lineTo(right, goalY);
+        context.stroke();
+        context.setLineDash([]);
+      }
+
+      const count = Math.min(labels, Math.max(2, Math.floor((width - left) / (labelSize * 6.5))));
+      const indices = count === 1 ? [0] : Array.from({ length: count }, (_, i) => Math.round(i * (labels - 1) / (count - 1)));
+      context.textAlign = "center";
+      context.textBaseline = "top";
+      context.fillStyle = chartTheme.muted;
+      for (const index of indices) {
+        const label = model.labels[index];
+        const halfLabel = context.measureText(label).width / 2;
+        context.fillText(label, Math.min(width - halfLabel - 2, Math.max(halfLabel + 2, x(index))), bottom + labelSize * .75);
+      }
+      return { left, right, top, bottom, cell };
+    }
+
+    function seriesFrame(color, backdrop = chartTheme.paper) {
+      const surfaces = [backdrop, chartTheme.highlight];
+      if (surfaces.every(surface => contrast(color, surface) >= 3)) return null;
+      return legibleShade(backdrop, surfaces, 4);
+    }
+
+    function drawBars(context, series, cell, x, y, bottom) {
+      const width = Math.max(2, Math.min(24, cell * .65));
+      const frame = seriesFrame(series.color);
+      for (const [index, value] of series.values.entries()) {
+        if (value <= 0) continue;
+        const left = x(index) - width / 2;
+        const top = y(value);
+        const height = bottom - top;
+        context.fillStyle = series.color;
+        context.fillRect(left, top, width, height);
+        if (frame) {
+          context.strokeStyle = frame;
+          context.lineWidth = 1.2;
+          context.strokeRect(left, top, width, height);
+        }
+      }
+    }
+
+    function strokeSeries(context, series, frame) {
+      context.lineJoin = "round";
+      context.lineCap = "round";
+      context.setLineDash(series.dashes ?? []);
+      if (frame) {
+        context.strokeStyle = frame;
+        context.lineWidth = 4.8;
+        context.stroke();
+      }
+      context.strokeStyle = series.color;
+      context.lineWidth = 2.4;
+      context.stroke();
+      context.setLineDash([]);
+    }
+
+    function paintDot(context, color, frame, x, y, radius) {
+      context.beginPath();
+      context.arc(x, y, radius, 0, Math.PI * 2);
+      context.fillStyle = color;
+      context.fill();
+      context.lineWidth = 1.4;
+      context.strokeStyle = frame;
+      context.stroke();
+    }
+
+    function drawDottedLine(context, series, cell, x, y, active) {
+      const frame = seriesFrame(series.color);
+      context.beginPath();
+      context.moveTo(x(0), y(series.values[0]));
+      for (let index = 1; index < series.values.length; index += 1) {
+        context.lineTo(x(index), y(series.values[index]));
+      }
+      strokeSeries(context, series, frame);
+
+      const radius = Math.min(4, cell * .28);
+      for (const [index, value] of series.values.entries()) {
+        paintDot(context, series.color, frame ?? chartTheme.paper, x(index), y(value), index === active ? radius + 1.7 : radius);
+      }
+    }
+
+    function drawSteps(context, series, cell, x, y, bottom, fill, active, backdrop = chartTheme.paper) {
+      if (!series.values.length) return;
+      const frame = seriesFrame(series.color, backdrop);
+      context.beginPath();
+      context.moveTo(x(0) - cell / 2, y(series.start));
+      let previous = series.start;
+      for (const [index, value] of series.values.entries()) {
+        context.lineTo(x(index), y(previous));
+        context.lineTo(x(index), y(value));
+        previous = value;
+      }
+      const end = x(series.values.length - 1) + cell / 2;
+      context.lineTo(end, y(previous));
+      strokeSeries(context, series, frame);
+      if (fill) {
+        context.lineTo(end, bottom);
+        context.lineTo(x(0) - cell / 2, bottom);
+        context.closePath();
+        context.fillStyle = series.color + "19";
+        context.fill();
+      }
+      if (active >= 0 && active < series.values.length) {
+        paintDot(context, series.color, frame ?? backdrop, x(active), y(series.values[active]), 4);
+      }
+    }
+
+    function drawMini(canvas, values, color) {
+      const { context, width, height } = resizeCanvas(canvas);
+      if (width <= 0 || height <= 0) return;
+      const max = Math.max(...values, 1);
+      const top = 8;
+      const bottom = height - 9;
+      const cell = (width - 16) / values.length;
+      const x = index => 8 + (index + .5) * cell;
+      const y = value => bottom - value / max * (bottom - top);
+      context.strokeStyle = chartTheme.grid;
+      for (let index = 0; index <= 3; index += 1) {
+        const yy = top + index * (bottom - top) / 3;
+        context.beginPath();
+        context.moveTo(0, yy);
+        context.lineTo(width, yy);
+        context.stroke();
+      }
+      drawSteps(context, { color, values, start: 0 }, cell, x, y, bottom, true, values.length - 1, chartTheme.raised);
+    }
+
+    function dot(color) {
+      const element = document.createElement("span");
+      element.className = "dot";
+      element.style.setProperty("--habit", color);
+      element.style.setProperty("--dot-frame", seriesFrame(color, chartTheme.raised) ?? "transparent");
+      element.setAttribute("aria-hidden", "true");
+      return element;
+    }
+
+    function renderLegend(id, items) {
+      const legend = get(id);
+      legend.replaceChildren(...items.map(([key, color]) => {
+        const entry = document.createElement("span");
+        entry.append(dot(color), key);
+        return entry;
+      }));
+      legend.hidden = items.length === 0;
+    }
+
+    function renderCharts() {
+      const habit = activeHabit();
+      chartSelection = null;
+      if (!habit) {
+        drawMini(get("preview"), [0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 4, 4, 4, 4, 5, 5, 6, 6, 6, 7, 7, 8], chartTheme.accent);
+        return;
+      }
+      if (screen === "overview") {
+        const span = overviewSpan(data.settings.overviewDays);
+        for (const [index, canvas] of [...get("overview-grid").querySelectorAll("canvas")].entries()) {
+          const overviewHabit = data.habits[index];
+          drawMini(canvas, overviewSeries(overviewHabit, span), overviewHabit.color);
+        }
+        return;
+      }
+      if (screen === "compare") {
+        const span = overviewSpan(data.settings.overviewDays);
+        const canvas = get("compare-chart");
+        const { context, width, height } = resizeCanvas(canvas);
+        const series = data.habits.map((item, index) => ({
+          color: item.color, values: overviewSeries(item, span), start: 0,
+          dashes: [[], [5, 3], [2, 3], [7, 3, 2, 3]][index % 4]
+        }));
+        drawChart(context, width, height, { labels: span.labels, series });
+        canvas.setAttribute("aria-label", "Completions for " + spanLabel(data.settings.overviewDays) + ". " + data.habits.map((item, index) => item.name + ": " + series[index].values.at(-1)).join(". "));
+        renderLegend("compare-legend", data.habits.map((item, index) => [item.name + " · " + number.format(series[index].values.at(-1)), item.color]));
+        return;
+      }
+      const canvas = get("habit-chart");
+      const { context, width, height } = resizeCanvas(canvas);
+      const model = habitChart(habit, data.settings.style, data.settings.range, dailyCounts(habit));
+      const bounds = drawChart(context, width, height, model);
+      chartSelection = model.days ? { days: model.days, bounds } : null;
+      canvas.classList.toggle("clickable", Boolean(chartSelection));
+      canvas.setAttribute("aria-label", habit.name + ". " + model.summary + ".");
+      get("chart-note").textContent = model.note;
+      const legend = model.legend ?? (model.goal ? [["Goal: " + number.format(model.goal) + " per week", chartTheme.goal]] : []);
+      renderLegend("chart-legend", legend);
+    }
+    function renderStorageStatus() {
+      const warning = get("storage-warning");
+      warning.hidden = !storageProblem;
+      warning.textContent = storageProblem;
+      get("storage-status").classList.toggle("warning", Boolean(storageProblem));
+      get("storage-status").textContent = storageProblem ? "Automatic saving unavailable" : "Saved on this browser";
+    }
+
+    function renderHabits(active) {
+      const list = get("habit-list");
+      const focusedId = list.contains(document.activeElement) ? document.activeElement.dataset.habit : null;
+      get("sidebar-note").hidden = Boolean(active);
+      list.replaceChildren(...data.habits.map(habit => {
+        const item = document.createElement("li");
+        const button = document.createElement("button");
+        button.type = "button";
+        button.dataset.habit = habit.id;
+        button.setAttribute("aria-pressed", String(habit.id === active?.id));
+        const name = document.createElement("span");
+        name.className = "habit-name";
+        name.textContent = habit.name;
+        const count = document.createElement("span");
+        count.className = "habit-count";
+        count.setAttribute("aria-hidden", "true");
+        count.textContent = number.format(habit.entries.length);
+        button.append(dot(habit.color), name, count);
+        item.append(button);
+        if (habit.id === focusedId) button.dataset.restoreFocus = "";
+        return item;
+      }));
+      list.querySelector("[data-restore-focus]")?.focus({ preventScroll: true });
+      const picker = get("habit-select");
+      get("mobile-switch").hidden = !active || screen !== "habit";
+      picker.replaceChildren(...data.habits.map(habit => new Option(habit.name, habit.id)));
+      if (active) picker.value = active.id;
+    }
+
+    function renderHabit(habit) {
+      const counts = dailyCounts(habit);
+      const loggedMonth = [...counts.keys()].filter(date => date.startsWith(today.slice(0, 7)) && date <= today).length;
+      const selectedCount = counts.get(selectedDay) ?? 0;
+      const todayCount = counts.get(today) ?? 0;
+      const selectedEntries = habit.entries.filter(entry => entry.day === selectedDay);
+      const limitDescription = habit.mode === "binary" ? "Once per day" :
+        habit.limit ? "Up to " + number.format(habit.limit) + " per day" : "Multiple per day";
+      const goalProgress = habit.goal ? " · Weekly goal " + number.format(totalIn(habit, weekStart(today), today)) + " / " + number.format(habit.goal) : "";
+      const loggedAt = selectedEntries.length ? shortTime.format(new Date(selectedEntries.at(-1).at)) : "";
+
+      get("today-date").textContent = fullDay.format(calendarDate(today));
+      get("habit-title").textContent = habit.name;
+      get("habit-meta").textContent = limitDescription + goalProgress;
+      get("metric-total").textContent = number.format(habit.entries.length);
+      get("metric-streak").textContent = number.format(currentStreak(counts));
+      get("metric-month").textContent = number.format(loggedMonth);
+      get("log-today").disabled = !withinLimit(habit, todayCount);
+      get("log-today").lastChild.textContent = withinLimit(habit, todayCount) ? " Log today" :
+        habit.mode === "binary" ? " Logged today" : " Daily limit reached";
+      get("chart-type").value = data.settings.style;
+      get("range-tabs").hidden = !["step", "line", "daily"].includes(data.settings.style);
+      for (const button of get("range-tabs").querySelectorAll("button")) {
+        button.setAttribute("aria-pressed", String(Number(button.dataset.range) === data.settings.range));
+      }
+
+      get("day-summary").textContent = selectedDay === today ? "Today" : fullDay.format(calendarDate(selectedDay));
+      const completionText = number.format(selectedCount) + (selectedCount === 1 ? " completion" : " completions");
+      get("day-note").textContent = completionText + (selectedDay === today && loggedAt ? " · Last logged at " + loggedAt : "");
+      get("day-panel").classList.toggle("today-open", selectedDay === today && todayCount === 0);
+      const date = get("log-date");
+      date.max = today;
+      date.value = selectedDay;
+      get("previous-day").disabled = selectedDay <= "0001-01-01";
+      get("next-day").disabled = selectedDay >= today;
+      get("remove-entry").disabled = selectedCount === 0;
+      get("add-entry").disabled = !withinLimit(habit, selectedCount);
+      get("undo").disabled = !undo;
+    }
+
+    function renderOverview() {
+      const span = overviewSpan(data.settings.overviewDays);
+      get("overview-grid").replaceChildren(...data.habits.map(habit => {
+        const card = document.createElement("button");
+        card.type = "button";
+        card.className = "mini";
+        card.dataset.habit = habit.id;
+        const title = document.createElement("span");
+        title.className = "mini-title";
+        title.append(dot(habit.color), habit.name);
+        const canvas = document.createElement("canvas");
+        canvas.setAttribute("aria-hidden", "true");
+        const meta = document.createElement("span");
+        meta.className = "meta";
+        const count = totalIn(habit, span.start, today);
+        meta.textContent = number.format(count) + (count === 1 ? " completion" : " completions");
+        card.append(title, canvas, meta);
+        return card;
+      }));
+    }
+
+    function render() {
+      applyTheme();
+      const habit = activeHabit();
+      get("empty-view").hidden = Boolean(habit);
+      get("overview-range-form").hidden = !habit || screen === "habit";
+      get("overview-range").value = data.settings.overviewDays;
+      const period = spanLabel(data.settings.overviewDays);
+      get("overview-period").textContent = "Completions for " + period + ". Select a habit to open its tracker.";
+      get("compare-period").textContent = "Completions added over " + period + ".";
+      if (data.settings.overviewDays === 1) get("compare-period").textContent = "Completions added today.";
+      for (const view of ["habit", "overview", "compare"]) get(view + "-view").hidden = !habit || screen !== view;
+      for (const button of get("screen-tabs").querySelectorAll("button")) {
+        button.setAttribute("aria-pressed", String(button.dataset.screen === (habit ? screen : "habit")));
+        button.disabled = !habit && button.dataset.screen !== "habit";
+      }
+      renderStorageStatus();
+      renderHabits(habit);
+      if (habit && screen === "habit") renderHabit(habit);
+      if (habit && screen === "overview") renderOverview();
+      renderCharts();
+    }
+
+    function showHabit(id, focusTitle = false) {
+      if (!data.habits.some(habit => habit.id === id)) return;
+      data.settings.selectedId = id;
+      screen = "habit";
+      selectedDay = today;
+      clearMessages();
+      saveData();
+      render();
+      if (focusTitle) {
+        get("habit-title").tabIndex = -1;
+        get("habit-title").focus();
+      }
+    }
+
+    function showDay(day) {
+      if (!validDay(day) || day > today) return;
+      selectedDay = day;
+      renderHabit(activeHabit());
+      renderCharts();
+    }
+
+    function pickerColor(field) {
+      const text = field.value.trim();
+      const color = text.startsWith("#") ? text : "#" + text;
+      return hexColor.test(color) ? color.toLowerCase() : null;
+    }
+
+    function fillColorPair(picker, field, color) {
+      get(picker).value = color;
+      get(field).value = color;
+    }
+
+    function bindColorPair(picker, field) {
+      const input = get(picker);
+      const hex = get(field);
+      input.addEventListener("input", () => { hex.value = input.value; });
+      hex.addEventListener("input", () => {
+        const color = pickerColor(hex);
+        if (color) input.value = color;
+      });
+    }
+
+    function openTheme() {
+      const { background, accent } = data.settings.theme;
+      fillColorPair("background-input", "background-hex", background);
+      fillColorPair("accent-input", "accent-hex", accent);
+      get("theme-dialog").showModal();
+    }
+
+    function saveTheme(event) {
+      event.preventDefault();
+      const background = pickerColor(get("background-hex"));
+      const accent = pickerColor(get("accent-hex"));
+      if (!background || !accent) return;
+      data.settings.theme = { background, accent };
+      get("theme-dialog").close();
+      saveData();
+      render();
+      announce("Theme saved.");
+    }
+
+    function openHabitForm(habit) {
+      editingId = habit?.id ?? null;
+      get("habit-dialog-title").textContent = habit ? "Edit habit" : "New habit";
+      get("save-habit").textContent = habit ? "Save changes" : "Create habit";
+      get("name-input").setCustomValidity("");
+      get("name-input").value = habit?.name ?? "";
+      get("mode-input").value = habit?.mode ?? "binary";
+      get("limit-input").value = habit?.limit ?? "";
+      get("goal-input").value = habit?.goal ?? "";
+      const color = habit?.color ?? palette[data.habits.length % palette.length];
+      fillColorPair("color-input", "hex-input", color);
+      syncLimitField();
+      get("habit-dialog").showModal();
+      get("name-input").select();
+    }
+
+    function syncLimitField() {
+      const binary = get("mode-input").value === "binary";
+      get("limit-field").hidden = binary;
+      get("limit-input").disabled = binary;
+    }
+
+    function saveHabitForm(event) {
+      event.preventDefault();
+      const nameInput = get("name-input");
+      const name = nameInput.value.trim();
+      if (!name) {
+        nameInput.setCustomValidity("Enter a habit name.");
+        nameInput.reportValidity();
+        return;
+      }
+      const mode = get("mode-input").value;
+      const limit = mode === "counter" && get("limit-input").value !== "" ? get("limit-input").valueAsNumber : null;
+      const goal = get("goal-input").value === "" ? null : get("goal-input").valueAsNumber;
+      const color = pickerColor(get("hex-input"));
+      if (!color) return;
+      const existing = data.habits.find(habit => habit.id === editingId);
+      if (editingId && !existing) {
+        get("habit-dialog").close();
+        announce("This habit is no longer available.");
+        return;
+      }
+      const habit = existing ?? {
+        id: Array.from(crypto.getRandomValues(new Uint8Array(16)), byte => byte.toString(16).padStart(2, "0")).join(""),
+        entries: []
+      };
+      Object.assign(habit, { name, mode, limit, goal, color });
+      if (!existing) data.habits.push(habit);
+      get("habit-dialog").close();
+      showHabit(habit.id, !existing);
+      announce(existing ? "Habit updated." : "Habit created.");
+    }
+
+    function download(blob, fileName) {
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = fileName;
+      document.body.append(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 30000);
+    }
+
+    function exportBackup() {
+      const blob = new Blob([JSON.stringify(backupEnvelope(), null, 2)], { type: "application/json" });
+      download(blob, "charting-habits-backup-" + today + ".json");
+      announce("Backup exported.");
+    }
+
+    async function chooseBackup(event) {
+      const file = event.target.files[0];
+      event.target.value = "";
+      if (!file) return;
+      let backup;
+      try {
+        if (file.size > 32 * 1024 * 1024) throw new Error("Backup is too large.");
+        backup = checkedBackup(await file.text());
+      } catch (error) {
+        announce(error instanceof SyntaxError ? "Choose a valid Charting Habits backup file." : error.message);
+        return;
+      }
+      const { settings } = data;
+      const customSettings = settings.overviewDays !== 30 || settings.theme.background !== defaultTheme.background ||
+        settings.theme.accent !== defaultTheme.accent;
+      if (!data.habits.length && !customSettings && !unreadableSave) {
+        restoreBackup(backup);
+        return;
+      }
+      pendingBackup = backup;
+      const count = number.format(backup.habits.length);
+      const noun = backup.habits.length === 1 ? "habit" : "habits";
+      get("restore-summary").textContent = "This will replace your current habits, history, and settings with the " + count + " " + noun + " and data in the backup.";
+      const dialog = get("restore-dialog");
+      dialog.returnValue = "cancel";
+      dialog.showModal();
+    }
+
+    function restoreBackup(backup) {
+      unreadableSave = false;
+      data = backup;
+      undo = null;
+      selectedDay = today;
+      screen = "habit";
+      clearMessages();
+      saveData();
+      render();
+      announce("Backup restored.");
+    }
+
+    function exportChart() {
+      const habit = activeHabit();
+      if (!habit) return;
+      const canvas = document.createElement("canvas");
+      canvas.width = 1200;
+      canvas.height = 676;
+      const context = canvas.getContext("2d");
+      const style = data.settings.style === "line" ? "line" : "step";
+      const model = habitChart(habit, style, 30, dailyCounts(habit));
+      const end = shortDay.format(calendarDate(today));
+      const start = shortDay.format(calendarDate(moveDay(today, -29)));
+      const completed = totalIn(habit, moveDay(today, -29), today);
+      model.active = -1;
+      model.pendingToday = false;
+      context.fillStyle = chartTheme.paper;
+      context.fillRect(0, 0, canvas.width, canvas.height);
+      context.fillStyle = chartTheme.accent;
+      context.fillRect(0, 0, canvas.width, 12);
+      context.fillStyle = chartTheme.muted;
+      context.font = '22px "Segoe UI", sans-serif';
+      context.fillText("Charting Habits", 48, 58);
+      context.fillStyle = chartTheme.ink;
+      context.font = "54px Georgia, serif";
+      context.fillText(habit.name, 48, 125, 1104);
+      context.font = '23px "Segoe UI", sans-serif';
+      context.fillStyle = chartTheme.muted;
+      context.fillText(start + " – " + end + " · " + number.format(completed) + " logged in this period", 48, 169);
+      context.translate(45, 212);
+      drawChart(context, 1110, 423, model, 19);
+      canvas.toBlob(blob => {
+        if (!blob) {
+          announce("The chart image could not be created.");
+          return;
+        }
+        download(blob, "charting-habits-" + today + ".png");
+        announce("30-day chart exported.");
+      }, "image/png");
+    }
+
+    function refreshFromAnotherTab(event) {
+      if (event.key !== storageKey && event.key !== null) return;
+      const raw = event.key === null ? null : event.newValue;
+      try {
+        data = raw === null ? emptyData() : checkedBackup(raw);
+        unreadableSave = false;
+        storageProblem = "";
+      } catch {
+        unreadableSave = true;
+        storageProblem = "Saved data changed in another tab and could not be read. Your current view is kept.";
+      }
+      undo = null;
+      render();
+      announce("Browser storage changed in another tab.");
+    }
+    bindColorPair("color-input", "hex-input");
+    bindColorPair("background-input", "background-hex");
+    bindColorPair("accent-input", "accent-hex");
+    get("open-theme").addEventListener("click", openTheme);
+    get("cancel-theme").addEventListener("click", () => get("theme-dialog").close());
+    get("theme-form").addEventListener("submit", saveTheme);
+    get("overview-range-form").addEventListener("submit", event => {
+      event.preventDefault();
+      const input = get("overview-range");
+      const days = input.valueAsNumber;
+      if (!validOverviewDays(days)) return;
+      data.settings.overviewDays = days;
+      saveData();
+      render();
+    });
+    for (const button of document.querySelectorAll(".add-habit")) {
+      button.addEventListener("click", () => openHabitForm());
+    }
+    get("edit-habit").addEventListener("click", () => openHabitForm(activeHabit()));
+    get("name-input").addEventListener("input", event => event.target.setCustomValidity(""));
+    get("mode-input").addEventListener("change", syncLimitField);
+    get("cancel-habit").addEventListener("click", () => get("habit-dialog").close());
+    get("habit-form").addEventListener("submit", saveHabitForm);
+
+    get("screen-tabs").addEventListener("click", event => {
+      const button = event.target.closest("[data-screen]");
+      if (!button || button.disabled) return;
+      screen = button.dataset.screen;
+      clearMessages();
+      render();
+    });
+    get("habit-list").addEventListener("click", event => {
+      const button = event.target.closest("[data-habit]");
+      if (button) showHabit(button.dataset.habit);
+    });
+    get("overview-grid").addEventListener("click", event => {
+      const button = event.target.closest("[data-habit]");
+      if (button) showHabit(button.dataset.habit, true);
+    });
+    get("habit-select").addEventListener("change", event => showHabit(event.target.value));
+    get("chart-type").addEventListener("change", event => {
+      data.settings.style = event.target.value;
+      saveData();
+      render();
+    });
+    get("range-tabs").addEventListener("click", event => {
+      const button = event.target.closest("[data-range]");
+      if (!button) return;
+      data.settings.range = Number(button.dataset.range);
+      saveData();
+      render();
+    });
+    get("habit-chart").addEventListener("click", event => {
+      if (!chartSelection) return;
+      const rect = event.currentTarget.getBoundingClientRect();
+      const { bounds, days } = chartSelection;
+      const x = event.clientX - rect.left;
+      const y = event.clientY - rect.top;
+      if (x < bounds.left || x > bounds.right || y < bounds.top || y > bounds.bottom) return;
+      showDay(days[Math.min(days.length - 1, Math.floor((x - bounds.left) / bounds.cell))]);
+    });
+    get("log-date").min = "0001-01-01";
+    get("log-date").addEventListener("change", event => {
+      const date = event.target;
+      if (!date.validity.valid || !validDay(date.value) || date.value > today) {
+        date.value = selectedDay;
+        announce("Choose today or an earlier date.");
+        return;
+      }
+      showDay(date.value);
+    });
+    get("previous-day").addEventListener("click", () => showDay(moveDay(selectedDay, -1)));
+    get("next-day").addEventListener("click", () => showDay(moveDay(selectedDay, 1)));
+    get("log-today").addEventListener("click", () => {
+      updateToday();
+      changeEntry(today, 1);
+    });
+    get("add-entry").addEventListener("click", () => changeEntry(selectedDay, 1));
+    get("remove-entry").addEventListener("click", () => changeEntry(selectedDay, -1));
+    get("undo").addEventListener("click", undoChange);
+    get("export-image").addEventListener("click", exportChart);
+
+    const dataMenu = get("data-menu");
+    get("export-backup").addEventListener("click", () => {
+      dataMenu.open = false;
+      dataMenu.querySelector("summary").focus();
+      exportBackup();
+    });
+    get("restore-backup").addEventListener("click", () => {
+      dataMenu.open = false;
+      dataMenu.querySelector("summary").focus();
+      get("backup-file").click();
+    });
+    document.addEventListener("click", event => {
+      if (dataMenu.open && !dataMenu.contains(event.target)) dataMenu.open = false;
+    });
+    dataMenu.addEventListener("keydown", event => {
+      if (event.key !== "Escape" || !dataMenu.open) return;
+      dataMenu.open = false;
+      dataMenu.querySelector("summary").focus();
+    });
+    get("backup-file").addEventListener("change", chooseBackup);
+    get("restore-dialog").addEventListener("close", event => {
+      if (event.target.returnValue === "restore" && pendingBackup) restoreBackup(pendingBackup);
+      pendingBackup = null;
+    });
+
+    function refreshDate() {
+      if (updateToday()) render();
+    }
+    window.addEventListener("resize", renderCharts);
+    window.addEventListener("focus", refreshDate);
+    window.addEventListener("storage", refreshFromAnotherTab);
+    document.addEventListener("visibilitychange", refreshDate);
+    setInterval(refreshDate, 30000);
+    loadData();
+    render();
+  </script>
+</body>
+</html>
