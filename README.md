@@ -11,11 +11,12 @@ Charting Habits is an offline habit tracker you can run from a single HTML file.
 1. Download the HTML file and open it in a modern browser. No account, server, or installation is needed.
 2. Select **New habit**. Choose one completion per day or a counter with an optional daily limit.
 3. Select **Log today** to record progress. Select an earlier date on the chart or use the date field to add or remove a completion. **Undo** reverses the last log change.
+4. To remove a habit, open **Edit habit**, select **Delete habit**, and confirm. This removes that habit's completion history. Other habits keep their history.
 
 ## What you can do
 
 - **See progress.** Switch between a step line, a line with dots, daily bars, weekly bars, and monthly comparison. Track streaks, days logged this month, and progress toward a weekly goal.
-- **View habits together.** Use **Overview** for small charts or **Compare habits** for one combined chart. Change **Days shown** to set the range for both views.
+- **View habits together.** Use **Overview** for small charts or **Compare habits** for one combined chart. Both views share **Days shown** and **View chart style**, with step lines, lines with dots, and daily bars. In Compare, bars show habits side by side. On longer ranges, bars group nearby dates to fit the chart.
 - **Choose your colors.** The default theme is black and blue. Use **Theme** to change the background and accent, and set each habit's chart color in **Edit habit**. Use the color pickers or paste a hex code.
 - **Share a chart.** **Export chart** saves a 30-day PNG for the current habit.
 

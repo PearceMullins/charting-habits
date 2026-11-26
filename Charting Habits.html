@@ -89,6 +89,8 @@
     .button.quiet:not(:disabled):hover, .data-menu[open] summary { color: var(--selected-ink); }
     .button.danger { color: #230d0a; background: #f3a698; border-color: #f3a698; }
     .button.danger:not(:disabled):hover { color: #230d0a; background: #ffc5ba; border-color: #ffc5ba; }
+    .button.delete-action { color: var(--delete-label, #f3a698); margin-right: auto; border-color: transparent; background: transparent; }
+    .button.delete-action:not(:disabled):hover { color: #230d0a; background: #f3a698; border-color: #f3a698; }
     .icon { min-width: 42px; padding-inline: 9px; font-size: 1.18rem; }
     .data-menu { position: relative; }
     .header-inner .actions { flex: none; flex-wrap: nowrap; }
@@ -114,6 +116,7 @@
     .range-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 12px; }
     .range-bar label { font-size: .89rem; font-weight: 650; }
     .range-bar input { width: min(100%, 11ch); }
+    .range-bar .view-style-label { margin-left: 10px; }
     .segment { width: max-content; max-width: 100%; padding: 3px; background: var(--raised); border-radius: 11px; gap: 2px; }
     .segment button { min-height: 38px; border: 1px solid transparent; background: transparent; }
     .segment button[aria-pressed="true"] {
@@ -238,6 +241,7 @@
       .brand-mark { width: 30px; height: 30px; padding: 7px; }
       .header-inner .actions { gap: 4px; }
       .workspace-bar { flex-wrap: wrap; }
+      .range-bar .view-style-label { margin-left: 0; }
       .hero { padding: 22px 16px 17px; align-items: flex-start; flex-wrap: wrap; }
       .hero .actions { flex-shrink: 1; }
       .metrics { margin: 0 16px 16px; }
@@ -384,6 +388,12 @@
           <label for="overview-range">Days shown</label>
           <input class="select" id="overview-range" type="number" min="1" max="9007199254740991" step="1" inputmode="numeric" required>
           <button class="button" type="submit">Apply</button>
+          <label class="view-style-label" for="overview-style">View chart style</label>
+          <select class="select" id="overview-style">
+            <option value="step">Step line</option>
+            <option value="line">Line with dots</option>
+            <option value="daily">Daily bars</option>
+          </select>
         </form>
         <section class="surface" id="overview-view" hidden aria-labelledby="overview-title">
           <div class="hero"><div class="hero-copy">
@@ -432,8 +442,19 @@
         </div>
       </div>
       <div class="actions">
+        <button class="button delete-action" id="delete-habit" type="button" hidden>Delete habit</button>
         <button class="button quiet" id="cancel-habit" type="button">Cancel</button>
         <button class="button primary" type="submit" id="save-habit">Create habit</button>
+      </div>
+    </form>
+  </dialog>
+  <dialog id="delete-dialog" aria-labelledby="delete-title" aria-describedby="delete-summary">
+    <form method="dialog">
+      <h2 id="delete-title">Delete habit?</h2>
+      <p class="muted" id="delete-summary"></p>
+      <div class="actions">
+        <button class="button" value="cancel" autofocus>Cancel</button>
+        <button class="button danger" value="delete">Delete habit</button>
       </div>
     </form>
   </dialog>
@@ -481,6 +502,7 @@
     const defaultTheme = { background: "#050505", accent: "#71aaff" };
     const palette = ["#71aaff", "#f2a28c", "#6dd9b2", "#d8a2ee", "#e5cf79", "#a4a6ff"];
     const chartStyles = ["step", "line", "daily", "weekly", "periods"];
+    const overviewStyles = ["step", "line", "daily"];
     const hexColor = /^#[0-9a-f]{6}$/i;
     const dayMilliseconds = 86400000;
     const fullDay = new Intl.DateTimeFormat(undefined, {
@@ -492,7 +514,9 @@
     const number = new Intl.NumberFormat();
     const shortTime = new Intl.DateTimeFormat(undefined, { hour: "numeric", minute: "2-digit" });
     const emptyData = () => ({
-      habits: [], settings: { selectedId: null, style: "step", range: 30, overviewDays: 30, theme: { ...defaultTheme } }
+      habits: [], settings: {
+        selectedId: null, style: "step", range: 30, overviewDays: 30, overviewStyle: "step", theme: { ...defaultTheme }
+      }
     });
     const get = id => document.getElementById(id);
 
@@ -503,7 +527,9 @@
     let undo = null;
     let storageProblem = "";
     let unreadableSave = false;
+    let savedSnapshot = null;
     let editingId = null;
+    let pendingHabitDelete = null;
     let pendingBackup = null;
     let chartSelection = null;
     let chartTheme;
@@ -574,6 +600,7 @@
         "--accent-border": legibleShade(accent, surfaces, 3), "--accent-readable": accentReadable,
         "--accent-dark": selected, "--selected-ink": legibleShade(accent, [selected], 4.5),
         "--pulse": accentReadable + "45",
+        "--delete-label": legibleShade(light ? "#9a2c1b" : "#f3a698", [paper], 4.5),
         "--warning": light ? "#874317" : "#f1be89",
         "--warning-paper": light ? "#fff0df" : "#261b13",
         "--warning-text": light ? "#6b3412" : "#f1be89",
@@ -613,11 +640,11 @@
       return Array.from({ length: count }, (_, index) => moveDay(end, index + 1 - count));
     }
 
-    function overviewSpan(count) {
+    function overviewSpan(count, maxPoints = 180) {
       const last = calendarDate(today).getTime();
       const supportedDays = (last - calendarDate("0001-01-01").getTime()) / dayMilliseconds + 1;
       const days = Math.min(count, supportedDays);
-      const size = Math.min(days, 180);
+      const size = Math.min(days, maxPoints);
       const start = moveDay(today, 1 - days);
       const formatter = days > 365 ? longRangeDay : shortDay;
       const labels = Array.from({ length: size }, (_, index) => {
@@ -627,7 +654,7 @@
       return { start, days, labels };
     }
 
-    function overviewSeries(habit, span) {
+    function overviewBins(habit, span) {
       const bins = Array(span.labels.length).fill(0);
       const start = calendarDate(span.start).getTime();
       for (const { day } of habit.entries) {
@@ -635,8 +662,12 @@
         const offset = (calendarDate(day).getTime() - start) / dayMilliseconds;
         bins[Math.floor(offset * bins.length / span.days)] += 1;
       }
+      return bins;
+    }
+
+    function overviewSeries(bins, style) {
       let running = 0;
-      return bins.map(count => (running += count));
+      return style === "daily" ? bins : bins.map(count => (running += count));
     }
 
     function validOverviewDays(value) {
@@ -719,13 +750,15 @@
           (settings.selectedId !== null && !ids.has(settings.selectedId))) invalid();
       const theme = settings.theme === undefined ? defaultTheme : settings.theme;
       const overviewDays = settings.overviewDays === undefined ? 30 : settings.overviewDays;
+      const overviewStyle = settings.overviewStyle === undefined ? "step" : settings.overviewStyle;
       if (!validOverviewDays(overviewDays)) invalid();
+      if (!overviewStyles.includes(overviewStyle)) invalid();
       if (!theme || typeof theme.background !== "string" || !hexColor.test(theme.background) ||
           typeof theme.accent !== "string" || !hexColor.test(theme.accent)) invalid();
       return {
         habits,
         settings: {
-          selectedId: settings.selectedId, style: settings.style, range: settings.range, overviewDays,
+          selectedId: settings.selectedId, style: settings.style, range: settings.range, overviewDays, overviewStyle,
           theme: { background: theme.background.toLowerCase(), accent: theme.accent.toLowerCase() }
         }
       };
@@ -744,6 +777,7 @@
         storageProblem = "This browser cannot save this local file. Export a backup before you close it.";
         return;
       }
+      savedSnapshot = saved;
       if (saved === null) return;
       try {
         data = checkedBackup(saved);
@@ -756,7 +790,9 @@
     function saveData() {
       if (unreadableSave) return;
       try {
-        localStorage.setItem(storageKey, JSON.stringify(backupEnvelope()));
+        const snapshot = JSON.stringify(backupEnvelope());
+        localStorage.setItem(storageKey, snapshot);
+        savedSnapshot = snapshot;
         storageProblem = "";
       } catch {
         storageProblem = "This browser could not save your latest changes. Export a backup before you close the file.";
@@ -783,8 +819,14 @@
 
     function changeEntry(day, delta) {
       updateToday();
-      const habit = activeHabit();
-      if (!habit || !validDay(day) || day > today) return;
+      const id = activeHabit()?.id;
+      syncSavedData();
+      const habit = data.habits.find(item => item.id === id);
+      if (!habit) {
+        render();
+        return;
+      }
+      if (!validDay(day) || day > today) return;
       const count = habit.entries.filter(entry => entry.day === day).length;
       if (delta > 0) {
         if (!withinLimit(habit, count)) {
@@ -810,6 +852,11 @@
     }
 
     function undoChange() {
+      if (syncSavedData()) {
+        render();
+        announce("Browser storage changed in another tab.");
+        return;
+      }
       if (!undo) return;
       const habit = data.habits.find(candidate => candidate.id === undo.habitId);
       if (!habit) return;
@@ -955,9 +1002,9 @@
         context.setLineDash([]);
       }
 
-      for (const series of model.series) {
+      for (const [index, series] of model.series.entries()) {
         if (model.bars) {
-          drawBars(context, series, cell, x, y, bottom);
+          drawBars(context, series, cell, x, y, bottom, index, model.series.length);
         } else if (model.dotted) {
           drawDottedLine(context, series, cell, x, y, model.active);
         } else {
@@ -995,20 +1042,24 @@
       return legibleShade(backdrop, surfaces, 4);
     }
 
-    function drawBars(context, series, cell, x, y, bottom) {
-      const width = Math.max(2, Math.min(24, cell * .65));
+    function drawBars(context, series, cell, x, y, bottom, seriesIndex = 0, seriesCount = 1) {
+      const groupWidth = cell * (seriesCount === 1 ? .65 : .84);
+      const lane = groupWidth / seriesCount;
+      const width = Math.min(24, lane * (seriesCount === 1 ? 1 : .8));
+      const offset = groupWidth * -.5 + (seriesIndex + .5) * lane;
       const frame = seriesFrame(series.color);
       for (const [index, value] of series.values.entries()) {
         if (value <= 0) continue;
-        const left = x(index) - width / 2;
+        const left = x(index) + offset - width / 2;
         const top = y(value);
         const height = bottom - top;
         context.fillStyle = series.color;
         context.fillRect(left, top, width, height);
         if (frame) {
+          const stroke = Math.min(1.2, width * .35, height * .35);
           context.strokeStyle = frame;
-          context.lineWidth = 1.2;
-          context.strokeRect(left, top, width, height);
+          context.lineWidth = stroke;
+          context.strokeRect(left + stroke / 2, top + stroke / 2, width - stroke, height - stroke);
         }
       }
     }
@@ -1079,7 +1130,7 @@
       }
     }
 
-    function drawMini(canvas, values, color) {
+    function drawMini(canvas, values, color, style = "step") {
       const { context, width, height } = resizeCanvas(canvas);
       if (width <= 0 || height <= 0) return;
       const max = Math.max(...values, 1);
@@ -1096,7 +1147,14 @@
         context.lineTo(width, yy);
         context.stroke();
       }
-      drawSteps(context, { color, values, start: 0 }, cell, x, y, bottom, true, values.length - 1, chartTheme.raised);
+      const series = { color, values, start: 0 };
+      if (style === "daily") {
+        drawBars(context, series, cell, x, y, bottom);
+      } else if (style === "line") {
+        drawDottedLine(context, series, cell, x, y, -1);
+      } else {
+        drawSteps(context, series, cell, x, y, bottom, true, values.length - 1, chartTheme.raised);
+      }
     }
 
     function dot(color) {
@@ -1125,25 +1183,38 @@
         drawMini(get("preview"), [0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 4, 4, 4, 4, 5, 5, 6, 6, 6, 7, 7, 8], chartTheme.accent);
         return;
       }
+      const { overviewDays, overviewStyle } = data.settings;
       if (screen === "overview") {
-        const span = overviewSpan(data.settings.overviewDays);
+        const span = overviewSpan(overviewDays);
+        const note = overviewStyle === "daily" && span.labels.length < span.days ? " Bars group nearby dates." : "";
+        get("overview-period").textContent = "Completions for " + spanLabel(overviewDays) + "." + note + " Select a habit to open its tracker.";
         for (const [index, canvas] of [...get("overview-grid").querySelectorAll("canvas")].entries()) {
           const overviewHabit = data.habits[index];
-          drawMini(canvas, overviewSeries(overviewHabit, span), overviewHabit.color);
+          const values = overviewSeries(overviewBins(overviewHabit, span), overviewStyle);
+          drawMini(canvas, values, overviewHabit.color, overviewStyle);
         }
         return;
       }
       if (screen === "compare") {
-        const span = overviewSpan(data.settings.overviewDays);
         const canvas = get("compare-chart");
         const { context, width, height } = resizeCanvas(canvas);
-        const series = data.habits.map((item, index) => ({
-          color: item.color, values: overviewSeries(item, span), start: 0,
-          dashes: [[], [5, 3], [2, 3], [7, 3, 2, 3]][index % 4]
-        }));
-        drawChart(context, width, height, { labels: span.labels, series });
-        canvas.setAttribute("aria-label", "Completions for " + spanLabel(data.settings.overviewDays) + ". " + data.habits.map((item, index) => item.name + ": " + series[index].values.at(-1)).join(". "));
-        renderLegend("compare-legend", data.habits.map((item, index) => [item.name + " · " + number.format(series[index].values.at(-1)), item.color]));
+        const bars = overviewStyle === "daily";
+        const slots = Math.min(180, Math.max(1, Math.floor((width - 44) / Math.max(6, data.habits.length * 2))));
+        const span = overviewSpan(overviewDays, bars ? slots : 180);
+        const series = data.habits.map((item, index) => {
+          const bins = overviewBins(item, span);
+          return {
+            color: item.color, values: overviewSeries(bins, overviewStyle), start: 0,
+            total: bins.reduce((sum, count) => sum + count, 0),
+            dashes: [[], [5, 3], [2, 3], [7, 3, 2, 3]][index % 4]
+          };
+        });
+        const period = "Completions for " + spanLabel(overviewDays) + ".";
+        const grouped = bars && span.labels.length < span.days ? " Bars group nearby dates." : "";
+        get("compare-period").textContent = period + grouped;
+        drawChart(context, width, height, { labels: span.labels, series, bars, dotted: overviewStyle === "line" });
+        canvas.setAttribute("aria-label", period + grouped + " " + data.habits.map((item, index) => item.name + ": " + series[index].total).join(". "));
+        renderLegend("compare-legend", data.habits.map((item, index) => [item.name + " · " + number.format(series[index].total), item.color]));
         return;
       }
       const canvas = get("habit-chart");
@@ -1261,10 +1332,7 @@
       get("empty-view").hidden = Boolean(habit);
       get("overview-range-form").hidden = !habit || screen === "habit";
       get("overview-range").value = data.settings.overviewDays;
-      const period = spanLabel(data.settings.overviewDays);
-      get("overview-period").textContent = "Completions for " + period + ". Select a habit to open its tracker.";
-      get("compare-period").textContent = "Completions added over " + period + ".";
-      if (data.settings.overviewDays === 1) get("compare-period").textContent = "Completions added today.";
+      get("overview-style").value = data.settings.overviewStyle;
       for (const view of ["habit", "overview", "compare"]) get(view + "-view").hidden = !habit || screen !== view;
       for (const button of get("screen-tabs").querySelectorAll("button")) {
         button.setAttribute("aria-pressed", String(button.dataset.screen === (habit ? screen : "habit")));
@@ -1289,6 +1357,11 @@
         get("habit-title").tabIndex = -1;
         get("habit-title").focus();
       }
+    }
+
+    function selectHabit(id, focusTitle = false) {
+      if (syncSavedData()) render();
+      showHabit(id, focusTitle);
     }
 
     function showDay(day) {
@@ -1331,6 +1404,7 @@
       const background = pickerColor(get("background-hex"));
       const accent = pickerColor(get("accent-hex"));
       if (!background || !accent) return;
+      syncSavedData();
       data.settings.theme = { background, accent };
       get("theme-dialog").close();
       saveData();
@@ -1342,6 +1416,7 @@
       editingId = habit?.id ?? null;
       get("habit-dialog-title").textContent = habit ? "Edit habit" : "New habit";
       get("save-habit").textContent = habit ? "Save changes" : "Create habit";
+      get("delete-habit").hidden = !habit;
       get("name-input").setCustomValidity("");
       get("name-input").value = habit?.name ?? "";
       get("mode-input").value = habit?.mode ?? "binary";
@@ -1352,6 +1427,52 @@
       syncLimitField();
       get("habit-dialog").showModal();
       get("name-input").select();
+    }
+
+    function showDeleteSummary(habit) {
+      get("delete-summary").textContent = "“" + habit.name + "” and all its completion history will be deleted. This cannot be undone.";
+    }
+
+    function openHabitDelete() {
+      const id = editingId;
+      if (syncSavedData()) render();
+      const habit = data.habits.find(item => item.id === id);
+      if (!habit) return;
+      pendingHabitDelete = habit.id;
+      showDeleteSummary(habit);
+      const dialog = get("delete-dialog");
+      dialog.returnValue = "cancel";
+      dialog.showModal();
+    }
+
+    function finishHabitDelete(event) {
+      const id = pendingHabitDelete;
+      pendingHabitDelete = null;
+      if (event.target.returnValue !== "delete" || !id) return;
+      if (syncSavedData()) render();
+      const index = data.habits.findIndex(item => item.id === id);
+      if (index === -1) {
+        announce("This habit is no longer available.");
+        return;
+      }
+
+      const wasSelected = activeHabit()?.id === id;
+      const [habit] = data.habits.splice(index, 1);
+      if (wasSelected || !data.habits.length) {
+        data.settings.selectedId = (data.habits[index] ?? data.habits[index - 1])?.id ?? null;
+      }
+      if (undo?.habitId === id) undo = null;
+      editingId = null;
+      get("habit-dialog").close();
+      screen = "habit";
+      selectedDay = today;
+      clearMessages();
+      saveData();
+      render();
+      const focus = activeHabit() ? get("habit-title") : get("empty-view").querySelector("button");
+      if (focus === get("habit-title")) focus.tabIndex = -1;
+      focus.focus();
+      announce("Deleted “" + habit.name + "”.");
     }
 
     function syncLimitField() {
@@ -1374,9 +1495,10 @@
       const goal = get("goal-input").value === "" ? null : get("goal-input").valueAsNumber;
       const color = pickerColor(get("hex-input"));
       if (!color) return;
-      const existing = data.habits.find(habit => habit.id === editingId);
-      if (editingId && !existing) {
-        get("habit-dialog").close();
+      const id = editingId;
+      if (syncSavedData()) render();
+      const existing = data.habits.find(habit => habit.id === id);
+      if (id && !existing) {
         announce("This habit is no longer available.");
         return;
       }
@@ -1403,6 +1525,7 @@
     }
 
     function exportBackup() {
+      if (syncSavedData()) render();
       const blob = new Blob([JSON.stringify(backupEnvelope(), null, 2)], { type: "application/json" });
       download(blob, "charting-habits-backup-" + today + ".json");
       announce("Backup exported.");
@@ -1420,8 +1543,9 @@
         announce(error instanceof SyntaxError ? "Choose a valid Charting Habits backup file." : error.message);
         return;
       }
+      if (syncSavedData()) render();
       const { settings } = data;
-      const customSettings = settings.overviewDays !== 30 || settings.theme.background !== defaultTheme.background ||
+      const customSettings = settings.overviewDays !== 30 || settings.overviewStyle !== "step" || settings.theme.background !== defaultTheme.background ||
         settings.theme.accent !== defaultTheme.accent;
       if (!data.habits.length && !customSettings && !unreadableSave) {
         restoreBackup(backup);
@@ -1487,9 +1611,15 @@
       }, "image/png");
     }
 
-    function refreshFromAnotherTab(event) {
-      if (event.key !== storageKey && event.key !== null) return;
-      const raw = event.key === null ? null : event.newValue;
+    function syncSavedData() {
+      let raw;
+      try {
+        raw = localStorage.getItem(storageKey);
+      } catch {
+        return false;
+      }
+      if (raw === savedSnapshot) return false;
+      savedSnapshot = raw;
       try {
         data = raw === null ? emptyData() : checkedBackup(raw);
         unreadableSave = false;
@@ -1497,8 +1627,30 @@
       } catch {
         unreadableSave = true;
         storageProblem = "Saved data changed in another tab and could not be read. Your current view is kept.";
+        return true;
       }
       undo = null;
+      if (!data.habits.length) screen = "habit";
+
+      const editor = get("habit-dialog");
+      if (editor.open && editingId) {
+        const habit = data.habits.find(item => item.id === editingId);
+        const confirmation = get("delete-dialog");
+        if (!habit) {
+          if (confirmation.open) confirmation.close("cancel");
+          pendingHabitDelete = null;
+          editingId = null;
+          editor.close();
+        } else if (confirmation.open && pendingHabitDelete === habit.id) {
+          showDeleteSummary(habit);
+        }
+      }
+      return true;
+    }
+
+    function refreshFromAnotherTab(event) {
+      if (event.key !== storageKey && event.key !== null) return;
+      if (!syncSavedData()) return;
       render();
       announce("Browser storage changed in another tab.");
     }
@@ -1513,9 +1665,21 @@
       const input = get("overview-range");
       const days = input.valueAsNumber;
       if (!validOverviewDays(days)) return;
+      syncSavedData();
       data.settings.overviewDays = days;
       saveData();
       render();
+    });
+    get("overview-style").addEventListener("change", event => {
+      const style = event.target.value;
+      if (!overviewStyles.includes(style)) return;
+      const range = get("overview-range");
+      const draftRange = range.value;
+      syncSavedData();
+      data.settings.overviewStyle = style;
+      saveData();
+      render();
+      range.value = draftRange;
     });
     for (const button of document.querySelectorAll(".add-habit")) {
       button.addEventListener("click", () => openHabitForm());
@@ -1525,6 +1689,8 @@
     get("mode-input").addEventListener("change", syncLimitField);
     get("cancel-habit").addEventListener("click", () => get("habit-dialog").close());
     get("habit-form").addEventListener("submit", saveHabitForm);
+    get("delete-habit").addEventListener("click", openHabitDelete);
+    get("delete-dialog").addEventListener("close", finishHabitDelete);
 
     get("screen-tabs").addEventListener("click", event => {
       const button = event.target.closest("[data-screen]");
@@ -1535,21 +1701,24 @@
     });
     get("habit-list").addEventListener("click", event => {
       const button = event.target.closest("[data-habit]");
-      if (button) showHabit(button.dataset.habit);
+      if (button) selectHabit(button.dataset.habit);
     });
     get("overview-grid").addEventListener("click", event => {
       const button = event.target.closest("[data-habit]");
-      if (button) showHabit(button.dataset.habit, true);
+      if (button) selectHabit(button.dataset.habit, true);
     });
-    get("habit-select").addEventListener("change", event => showHabit(event.target.value));
+    get("habit-select").addEventListener("change", event => selectHabit(event.target.value));
     get("chart-type").addEventListener("change", event => {
-      data.settings.style = event.target.value;
+      const style = event.target.value;
+      syncSavedData();
+      data.settings.style = style;
       saveData();
       render();
     });
     get("range-tabs").addEventListener("click", event => {
       const button = event.target.closest("[data-range]");
       if (!button) return;
+      syncSavedData();
       data.settings.range = Number(button.dataset.range);
       saveData();
       render();
