@@ -67,7 +67,7 @@
     .brand-mark i { background: var(--selected-ink); width: 4px; height: 6px; border-radius: 1px; }
     .brand-mark i:nth-child(2) { height: 10px; }
     .brand-mark i:nth-child(3) { height: 16px; }
-    .actions, .segment, .date-actions, .entry-actions, .chart-controls, .day-nav, .switcher {
+    .actions, .chart-controls, .day-nav {
       display: flex; align-items: center; flex-wrap: wrap; gap: 8px;
     }
     .button, .segment button {
@@ -111,14 +111,13 @@
     }
     .menu button { width: 100%; text-align: left; }
     .workspace { width: min(1220px, calc(100% - 56px)); margin: 34px auto 64px; }
-    .workspace-bar { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 18px; }
+    .workspace-bar { display: flex; justify-content: flex-end; align-items: center; margin-bottom: 18px; }
     .workspace-tools { justify-content: flex-end; }
     .range-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 12px; }
     .range-bar label { font-size: .89rem; font-weight: 650; }
-    .range-bar input { width: min(100%, 11ch); }
-    .range-bar .view-style-label { margin-left: 10px; }
-    .segment { width: max-content; max-width: 100%; padding: 3px; background: var(--raised); border-radius: 11px; gap: 2px; }
-    .segment button { min-height: 38px; border: 1px solid transparent; background: transparent; }
+    .range-bar input { width: 11ch; max-width: 100%; }
+    .segment { display: grid; grid-template-columns: minmax(0, 1fr); padding: 3px; background: var(--raised); border-radius: 11px; gap: 3px; }
+    .segment button { min-height: 44px; border: 1px solid transparent; background: transparent; text-align: left; overflow-wrap: anywhere; }
     .segment button[aria-pressed="true"] {
       background: var(--accent-dark); border-color: var(--control-line); color: var(--selected-ink);
     }
@@ -129,15 +128,20 @@
       padding: 12px 15px; margin-bottom: 16px; border: 1px solid var(--warning-line, #6f4b2d); border-radius: 10px;
       color: var(--warning-text, #f1be89); background: var(--warning-paper, #261b13); font-size: .91rem;
     }
-    .dashboard { display: grid; grid-template-columns: minmax(175px, 228px) minmax(0, 1fr); gap: 20px; align-items: start; }
+    .dashboard { display: grid; grid-template-columns: minmax(0, 1fr) 228px; gap: 20px; align-items: start; }
+    .content-column, .side-column { min-width: 0; }
+    .side-column { display: grid; gap: 12px; }
     .surface { background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); }
     .sidebar { padding: 18px 14px 14px; }
     .sidebar h2 { font-family: inherit; font-size: .96rem; font-weight: 700; letter-spacing: 0; margin: 0 7px 14px; }
     .habit-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 5px; }
     .habit-list button {
-      display: flex; align-items: center; gap: 10px; width: 100%; min-height: 43px; padding: 8px 9px;
+      display: grid; grid-template-columns: minmax(0, 1fr); gap: 4px; width: 100%; min-height: 44px; padding: 8px 9px;
       border: 1px solid transparent; border-radius: 10px; background: transparent; text-align: left; color: var(--ink);
     }
+    .habit-row-heading { display: flex; align-items: baseline; gap: 7px; min-width: 0; }
+    .habit-row-heading .dot { align-self: center; }
+    .habit-preview { display: block; width: 100%; height: 34px; }
     .habit-list button:hover { background: var(--raised); }
     .habit-list button[aria-pressed="true"] { background: var(--accent-dark); color: var(--selected-ink); border-color: var(--control-line); font-weight: 660; }
     .habit-list button[aria-pressed="true"] .habit-count { color: var(--selected-ink); }
@@ -160,36 +164,23 @@
     .hero .actions { flex-shrink: 0; }
     .log-button { min-height: 51px; padding: 12px 19px; display: flex; align-items: center; gap: 9px; }
     .log-button span { font-size: 1.4rem; line-height: .8; }
-    .metrics { margin: 0 28px 22px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; border: 1px solid var(--line); border-radius: 13px; background: var(--line); overflow: hidden; }
-    .metric { min-width: 0; padding: 13px 15px 12px; background: var(--raised); }
-    .metric b { display: block; font: 500 clamp(1.45rem, 3vw, 2.1rem) Georgia, serif; overflow-wrap: anywhere; }
-    .metric span { display: block; color: var(--muted); font-size: .78rem; line-height: 1.25; margin-top: 4px; }
     .chart-heading { padding: 0 28px; display: flex; align-items: center; flex-wrap: wrap; justify-content: space-between; gap: 10px; }
+    .chart-controls .range-bar { margin-bottom: 0; }
     .select {
       min-height: 42px; padding: 7px 9px; border: 1px solid var(--control-line); border-radius: 9px;
       background: var(--paper); color: var(--ink); font-size: .88rem; font-weight: 620;
     }
     .plot { position: relative; margin: 12px 24px 0; }
+    #habit-view .plot { margin-bottom: 22px; }
     canvas.plot-canvas { display: block; width: 100%; height: clamp(190px, 27vw, 300px); }
     .plot-canvas.clickable { cursor: crosshair; }
-    .plot-note { margin: 3px 28px 18px; font-size: .84rem; color: var(--muted); }
-    .day-panel {
-      display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 16px;
-      padding: 14px 18px; margin: 0 28px 16px; border: 1px solid var(--line); border-radius: 12px; background: var(--raised);
-    }
-    .day-panel.today-open { background: var(--accent-dark); color: var(--selected-ink); border-color: var(--control-line); }
-    .day-panel.today-open .day-note { color: var(--selected-ink); }
-    .day-summary { font-size: .9rem; font-weight: 650; }
-    .day-note { color: var(--muted); font-size: .81rem; margin-top: 3px; }
+    .day-editor { display: grid; gap: 9px; margin-top: 17px; }
+    .day-editor label { font-size: .89rem; font-weight: 650; }
     .day-nav input { border: 1px solid var(--control-line); border-radius: 8px; color: var(--ink); background: var(--paper); min-height: 42px; padding: 6px; font-size: .83rem; }
-    .chart-footer {
-      min-height: 62px; display: flex; align-items: center; flex-wrap: wrap; justify-content: space-between;
-      padding: 9px 28px; gap: 8px; border-top: 1px solid var(--line);
-    }
     .message { color: var(--muted); font-size: .86rem; }
-    .global-message:not(:empty) { display: block; margin: 12px 0 0; padding: 10px 13px; background: var(--paper); border-radius: 9px; }
+    .global-message:not(:empty) { display: block; margin: 0 0 12px; padding: 10px 13px; background: var(--paper); border-radius: 9px; }
     .legend { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 15px; padding: 0 28px 20px; }
-    .legend span { display: flex; align-items: center; gap: 6px; color: var(--muted); font-size: .85rem; overflow-wrap: anywhere; min-width: 0; }
+    .legend span { display: flex; align-items: center; gap: 6px; color: var(--muted); font-size: .85rem; overflow-wrap: anywhere; min-width: 0; max-width: 100%; }
     .overview { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 235px), 1fr)); gap: 16px; padding: 0 28px 28px; }
     .mini {
       min-width: 0; padding: 16px; text-align: left; border: 1px solid var(--line);
@@ -220,7 +211,6 @@
     .form-grid input, .form-grid select {
       width: 100%; min-height: 42px; padding: 7px 10px; border: 1px solid var(--control-line); border-radius: 8px; color: var(--ink); background: var(--raised);
     }
-    .fields { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     .color-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     .form-grid .color-picker { padding: 5px; cursor: pointer; }
     .color-picker::-webkit-color-swatch { border: 1px solid var(--control-line); border-radius: 4px; }
@@ -229,30 +219,41 @@
     @media (max-width: 820px) {
       .header-inner, .workspace { width: calc(100% - 30px); }
       .workspace { margin-top: 20px; }
-      .dashboard { grid-template-columns: minmax(0, 1fr); gap: 14px; }
-      .sidebar { display: none; }
-      .switcher { width: min(100%, 280px); margin-bottom: 14px; }
-      .switcher select { width: 100%; }
+      .dashboard { grid-template-columns: minmax(0, 1fr) clamp(104px, 30vw, 180px); gap: 12px; }
+      .hero { flex-wrap: wrap; }
     }
-    @media (min-width: 821px) { .switcher { display: none; } }
     @media (max-width: 550px) {
       .header-inner { min-height: 64px; }
       .brand { font-size: 1.09rem; gap: 7px; }
       .brand-mark { width: 30px; height: 30px; padding: 7px; }
       .header-inner .actions { gap: 4px; }
-      .workspace-bar { flex-wrap: wrap; }
-      .range-bar .view-style-label { margin-left: 0; }
-      .hero { padding: 22px 16px 17px; align-items: flex-start; flex-wrap: wrap; }
+      .dashboard, .side-column { gap: 8px; }
+      .segment button { padding-inline: 7px; font-size: .8rem; }
+      .sidebar { padding: 12px 5px 6px; border-radius: 12px; }
+      .sidebar h2 { margin: 0 3px 7px; font-size: .82rem; }
+      .sidebar-note { margin-inline: 3px; font-size: .75rem; overflow-wrap: anywhere; }
+      .sidebar .button { padding-inline: 5px; margin-top: 4px; font-size: .76rem; }
+      .habit-list button { padding: 6px 5px; border-radius: 7px; font-size: .76rem; }
+      .habit-row-heading { gap: 4px; }
+      .habit-row-heading .dot { width: 7px; height: 7px; }
+      .habit-list .habit-count { font-size: .65rem; }
+      .habit-preview { height: 28px; }
+      .hero { padding: 16px 11px 14px; align-items: flex-start; gap: 10px; }
+      .hero h1 { font-size: clamp(1.65rem, 6vw, 2.5rem); }
       .hero .actions { flex-shrink: 1; }
-      .metrics { margin: 0 16px 16px; }
-      .metric { padding-inline: 8px; }
-      .chart-heading { padding: 0 16px; }
+      .hero .button, .chart-controls .button { padding-inline: 8px; font-size: .8rem; }
+      .log-button { min-height: 44px; gap: 6px; }
+      .chart-heading { padding: 0 11px; }
+      .chart-heading h2 { font-size: 1.45rem; }
+      .chart-controls { gap: 5px; width: 100%; }
+      .content-column .range-bar { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 5px; width: min(100%, 13.5rem); }
+      .content-column .range-bar label { grid-column: 1 / -1; }
+      .content-column .range-bar input { width: 100%; min-width: 0; }
+      .content-column .range-bar button { padding-inline: 8px; }
       .plot { margin-inline: 10px; }
-      .plot-note { margin-inline: 16px; }
-      .day-panel { margin-inline: 16px; padding: 11px; }
-      .date-actions, .entry-actions { width: 100%; }
-      .entry-actions .button { flex: 1 0 auto; }
-      .chart-footer, .legend, .overview { padding-inline: 16px; }
+      .legend, .overview { padding-inline: 10px; }
+      .mini { padding: 9px; }
+      .empty-plot { padding-inline: 9px; }
     }
     @media (max-width: 370px) {
       .header-inner { gap: 7px; }
@@ -261,10 +262,6 @@
     }
     @media (max-width: 325px) {
       .brand-mark { display: none; }
-    }
-    @media (prefers-reduced-motion: no-preference) {
-      .day-panel.today-open { animation: today 2.25s ease-in-out 2; }
-      @keyframes today { 50% { box-shadow: 0 0 0 3px var(--pulse, #71aaff30); } }
     }
   </style>
 </head>
@@ -278,6 +275,7 @@
         <details class="data-menu" id="data-menu">
           <summary class="button">Data <span aria-hidden="true">⌄</span></summary>
           <div class="menu">
+            <button class="button quiet" id="export-image" type="button" hidden>Export chart</button>
             <button class="button quiet" id="export-backup" type="button">Export backup</button>
             <button class="button quiet" id="restore-backup" type="button">Restore backup</button>
           </div>
@@ -288,29 +286,15 @@
   </header>
   <main id="content" class="workspace">
     <div class="workspace-bar">
-      <div class="segment" id="screen-tabs" role="group" aria-label="Tracker view">
-        <button type="button" data-screen="habit" aria-pressed="true">Tracker</button>
-        <button type="button" data-screen="overview" aria-pressed="false">Overview</button>
-        <button type="button" data-screen="compare" aria-pressed="false">Compare habits</button>
-      </div>
       <div class="actions workspace-tools">
         <p class="status" id="storage-status">Saved on this browser</p>
         <button class="button" id="open-theme" type="button">Theme</button>
       </div>
     </div>
     <p class="notice" id="storage-warning" hidden></p>
+    <p id="app-status" class="message global-message" role="status"></p>
     <div class="dashboard">
-      <aside class="sidebar surface" aria-labelledby="habit-list-label">
-        <h2 id="habit-list-label">Your habits</h2>
-        <p class="sidebar-note" id="sidebar-note">Habits you create appear here.</p>
-        <ul class="habit-list" id="habit-list"></ul>
-        <button class="button quiet add-habit" type="button">+ Add habit</button>
-      </aside>
-      <div>
-        <div class="switcher" id="mobile-switch" hidden>
-          <label class="visually-hidden" for="habit-select">Switch habit</label>
-          <select class="select" id="habit-select"></select>
-        </div>
+      <div class="content-column">
         <section class="empty surface" id="empty-view">
           <div class="hero">
             <div class="hero-copy">
@@ -326,74 +310,31 @@
             <div class="hero-copy">
               <p class="eyebrow" id="today-date"></p>
               <h1 id="habit-title"></h1>
-              <p class="meta" id="habit-meta"></p>
             </div>
             <div class="actions">
               <button type="button" class="button primary log-button" id="log-today"><span aria-hidden="true">+</span> Log today</button>
               <button type="button" class="button quiet" id="edit-habit">Edit habit</button>
             </div>
           </div>
-          <div class="metrics">
-            <div class="metric"><b id="metric-total">0</b><span>Total completions</span></div>
-            <div class="metric"><b id="metric-streak">0</b><span>Current streak</span></div>
-            <div class="metric"><b id="metric-month">0</b><span>Days logged this month</span></div>
-          </div>
           <div class="chart-heading">
             <h2>Progress</h2>
             <div class="chart-controls">
-              <label class="visually-hidden" for="chart-type">Chart style</label>
-              <select class="select" id="chart-type">
-                <option value="step">Step line</option>
-                <option value="line">Line with dots</option>
-                <option value="daily">Daily bars</option>
-                <option value="weekly">Weekly bars</option>
-                <option value="periods">Compare months</option>
-              </select>
-              <div class="segment" id="range-tabs" role="group" aria-label="Date range">
-                <button type="button" data-range="7" aria-pressed="false">7 days</button>
-                <button type="button" data-range="30" aria-pressed="true">30 days</button>
-              </div>
-            </div>
-          </div>
-          <div class="plot"><canvas class="plot-canvas" id="habit-chart" role="img"></canvas></div>
-          <p class="plot-note" id="chart-note"></p>
-          <div class="legend" id="chart-legend" hidden></div>
-          <section class="day-panel" id="day-panel" aria-label="Edit completions by date">
-            <div>
-              <p class="day-summary" id="day-summary"></p>
-              <p class="day-note" id="day-note"></p>
-            </div>
-            <div class="date-actions">
-              <div class="day-nav">
-                <button class="button icon" type="button" id="previous-day" aria-label="Previous day">‹</button>
-                <label class="visually-hidden" for="log-date">Completion date</label>
-                <input type="date" id="log-date">
-                <button class="button icon" type="button" id="next-day" aria-label="Next day">›</button>
-              </div>
-              <div class="entry-actions">
-                <button class="button" type="button" id="remove-entry" aria-label="Remove completion on selected date"><span aria-hidden="true">−</span> Remove</button>
-                <button class="button" type="button" id="add-entry" aria-label="Add completion on selected date"><span aria-hidden="true">+</span> Add</button>
-              </div>
-            </div>
-          </section>
-          <div class="chart-footer">
-            <p class="message" id="chart-message" role="status"></p>
-            <div class="actions">
+              <form class="range-bar" id="tracker-range-form">
+                <label for="tracker-range">Days shown</label>
+                <input class="select" id="tracker-range" type="number" min="1" max="9007199254740991" step="1" inputmode="numeric" required>
+                <button class="button" type="submit">Apply</button>
+              </form>
+              <button class="button quiet" type="button" id="open-edit-day">Edit day</button>
               <button class="button quiet" type="button" id="undo" disabled>Undo</button>
-              <button class="button" type="button" id="export-image">Export chart</button>
             </div>
           </div>
+          <p class="visually-hidden" id="chart-message" role="status"></p>
+          <div class="plot"><canvas class="plot-canvas" id="habit-chart" role="img"></canvas></div>
         </section>
         <form class="range-bar" id="overview-range-form" hidden>
           <label for="overview-range">Days shown</label>
           <input class="select" id="overview-range" type="number" min="1" max="9007199254740991" step="1" inputmode="numeric" required>
           <button class="button" type="submit">Apply</button>
-          <label class="view-style-label" for="overview-style">View chart style</label>
-          <select class="select" id="overview-style">
-            <option value="step">Step line</option>
-            <option value="line">Line with dots</option>
-            <option value="daily">Daily bars</option>
-          </select>
         </form>
         <section class="surface" id="overview-view" hidden aria-labelledby="overview-title">
           <div class="hero"><div class="hero-copy">
@@ -411,9 +352,40 @@
           <div class="legend" id="compare-legend"></div>
         </section>
       </div>
+      <aside class="side-column" aria-label="Views and habits">
+        <div class="segment" id="screen-tabs" role="group" aria-label="Tracker view">
+          <button type="button" data-screen="habit" aria-pressed="true">Tracker</button>
+          <button type="button" data-screen="overview" aria-pressed="false">Overview</button>
+          <button type="button" data-screen="compare" aria-pressed="false">Compare habits</button>
+        </div>
+        <section class="sidebar surface" aria-labelledby="habit-list-label">
+          <h2 id="habit-list-label">Your habits</h2>
+          <p class="sidebar-note" id="sidebar-note">Habits you create appear here.</p>
+          <ul class="habit-list" id="habit-list"></ul>
+          <button class="button quiet add-habit" type="button">+ Add habit</button>
+        </section>
+      </aside>
     </div>
-    <p id="app-status" class="message global-message" role="status"></p>
   </main>
+  <dialog id="day-dialog" aria-labelledby="day-dialog-title">
+    <h2 id="day-dialog-title">Edit day</h2>
+    <p class="muted" id="day-habit"></p>
+    <div class="day-editor">
+      <label for="log-date">Completion date</label>
+      <div class="day-nav">
+        <button class="button icon" type="button" id="previous-day" aria-label="Previous day">‹</button>
+        <input type="date" id="log-date" min="0001-01-01" autofocus>
+        <button class="button icon" type="button" id="next-day" aria-label="Next day">›</button>
+      </div>
+      <p class="message" id="day-summary" role="status"></p>
+      <p class="message" id="day-message" role="status"></p>
+    </div>
+    <form class="actions" method="dialog">
+      <button class="button" type="button" id="remove-entry" aria-label="Remove completion on selected date">− Remove</button>
+      <button class="button" type="button" id="add-entry" aria-label="Add completion on selected date">+ Add</button>
+      <button class="button primary">Done</button>
+    </form>
+  </dialog>
   <dialog id="habit-dialog" aria-labelledby="habit-dialog-title">
     <form id="habit-form">
       <h2 id="habit-dialog-title">New habit</h2>
@@ -421,17 +393,6 @@
         <label for="name-input">Name
           <input id="name-input" name="name" required maxlength="80" placeholder="Read, walk, stretch…" autocomplete="off" autofocus>
         </label>
-        <label for="mode-input">Completions per day
-          <select id="mode-input" name="mode"><option value="binary">One per day</option><option value="counter">Multiple per day</option></select>
-        </label>
-        <div class="fields">
-          <label id="limit-field" for="limit-input" hidden>Daily limit
-            <input id="limit-input" name="limit" type="number" min="1" max="999" placeholder="Optional">
-          </label>
-          <label for="goal-input">Weekly goal
-            <input id="goal-input" name="goal" type="number" min="1" max="999" placeholder="Optional">
-          </label>
-        </div>
         <div class="color-fields">
           <label for="color-input">Chart color
             <input id="color-input" class="color-picker" name="color" type="color" value="#71aaff">
@@ -501,8 +462,6 @@
     const format = "charting-habits-backup";
     const defaultTheme = { background: "#050505", accent: "#71aaff" };
     const palette = ["#71aaff", "#f2a28c", "#6dd9b2", "#d8a2ee", "#e5cf79", "#a4a6ff"];
-    const chartStyles = ["step", "line", "daily", "weekly", "periods"];
-    const overviewStyles = ["step", "line", "daily"];
     const hexColor = /^#[0-9a-f]{6}$/i;
     const dayMilliseconds = 86400000;
     const fullDay = new Intl.DateTimeFormat(undefined, {
@@ -510,12 +469,10 @@
     });
     const shortDay = new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric", timeZone: "UTC" });
     const longRangeDay = new Intl.DateTimeFormat(undefined, { month: "short", year: "numeric", timeZone: "UTC" });
-    const shortMonth = new Intl.DateTimeFormat(undefined, { month: "short", timeZone: "UTC" });
     const number = new Intl.NumberFormat();
-    const shortTime = new Intl.DateTimeFormat(undefined, { hour: "numeric", minute: "2-digit" });
     const emptyData = () => ({
       habits: [], settings: {
-        selectedId: null, style: "step", range: 30, overviewDays: 30, overviewStyle: "step", theme: { ...defaultTheme }
+        selectedId: null, range: 30, overviewDays: 30, theme: { ...defaultTheme }
       }
     });
     const get = id => document.getElementById(id);
@@ -529,6 +486,7 @@
     let unreadableSave = false;
     let savedSnapshot = null;
     let editingId = null;
+    let editingDayHabit = null;
     let pendingHabitDelete = null;
     let pendingBackup = null;
     let chartSelection = null;
@@ -599,7 +557,6 @@
         "--accent-ink": textOn(accent), "--accent-hover-ink": textOn(accentHover),
         "--accent-border": legibleShade(accent, surfaces, 3), "--accent-readable": accentReadable,
         "--accent-dark": selected, "--selected-ink": legibleShade(accent, [selected], 4.5),
-        "--pulse": accentReadable + "45",
         "--delete-label": legibleShade(light ? "#9a2c1b" : "#f3a698", [paper], 4.5),
         "--warning": light ? "#874317" : "#f1be89",
         "--warning-paper": light ? "#fff0df" : "#261b13",
@@ -616,8 +573,7 @@
         paper, ink, muted, accent, raised,
         grid: mixColor(paper, ink, .17),
         guide: legibleShade(paper, [paper], 3),
-        highlight: selected,
-        goal: legibleShade(light ? "#8d481e" : "#e5a87e", [paper], 3.5)
+        highlight: selected
       };
     }
 
@@ -636,41 +592,37 @@
       return new Date(timestamp).toISOString().slice(0, 10);
     }
 
-    function daysEnding(end, count) {
-      return Array.from({ length: count }, (_, index) => moveDay(end, index + 1 - count));
-    }
-
-    function overviewSpan(count, maxPoints = 180) {
+    function chartSpan(count, maxPoints = 180) {
       const last = calendarDate(today).getTime();
       const supportedDays = (last - calendarDate("0001-01-01").getTime()) / dayMilliseconds + 1;
       const days = Math.min(count, supportedDays);
       const size = Math.min(days, maxPoints);
       const start = moveDay(today, 1 - days);
       const formatter = days > 365 ? longRangeDay : shortDay;
-      const labels = Array.from({ length: size }, (_, index) => {
-        const end = moveDay(start, Math.ceil((index + 1) * days / size) - 1);
-        return formatter.format(calendarDate(end));
-      });
-      return { start, days, labels };
+      const dates = Array.from({ length: size }, (_, index) => moveDay(start, Math.ceil((index + 1) * days / size) - 1));
+      const labels = dates.map(date => formatter.format(calendarDate(date)));
+      return { start, days, dates, labels };
     }
 
-    function overviewBins(habit, span) {
-      const bins = Array(span.labels.length).fill(0);
+    function chartTotals(habit, span, includeEarlier = false) {
+      const bins = Array(span.dates.length).fill(0);
       const start = calendarDate(span.start).getTime();
+      let earlier = 0;
       for (const { day } of habit.entries) {
-        if (day < span.start || day > today) continue;
+        if (day > today) continue;
+        if (day < span.start) {
+          if (includeEarlier) earlier += 1;
+          continue;
+        }
         const offset = (calendarDate(day).getTime() - start) / dayMilliseconds;
         bins[Math.floor(offset * bins.length / span.days)] += 1;
       }
-      return bins;
+      let running = earlier;
+      const values = bins.map(count => (running += count));
+      return { color: habit.color, values, start: earlier };
     }
 
-    function overviewSeries(bins, style) {
-      let running = 0;
-      return style === "daily" ? bins : bins.map(count => (running += count));
-    }
-
-    function validOverviewDays(value) {
+    function validRange(value) {
       return Number.isSafeInteger(value) && value > 0;
     }
 
@@ -684,37 +636,12 @@
       return Number.isFinite(parsed.getTime()) && parsed.toISOString().slice(0, 10) === day;
     }
 
-    function weekStart(day) {
-      return moveDay(day, -((calendarDate(day).getUTCDay() + 6) % 7));
-    }
-
     function activeHabit() {
       return data.habits.find(habit => habit.id === data.settings.selectedId) ?? data.habits[0];
     }
 
-    function dailyCounts(habit) {
-      const counts = new Map();
-      for (const entry of habit.entries) counts.set(entry.day, (counts.get(entry.day) ?? 0) + 1);
-      return counts;
-    }
-
-    function withinLimit(habit, count) {
-      if (habit.mode === "binary") return count === 0;
-      return habit.limit === null || count < habit.limit;
-    }
-
     function totalIn(habit, start, end) {
       return habit.entries.filter(entry => entry.day >= start && entry.day <= end).length;
-    }
-
-    function currentStreak(counts) {
-      let date = counts.has(today) ? today : moveDay(today, -1);
-      let streak = 0;
-      while (counts.has(date)) {
-        streak += 1;
-        date = moveDay(date, -1);
-      }
-      return streak;
     }
 
     function backupEnvelope() {
@@ -728,12 +655,10 @@
       const parsed = JSON.parse(raw);
       if (parsed?.format !== format || parsed.version !== 1 || !Array.isArray(parsed.data?.habits)) invalid();
       const ids = new Set();
-      const validOptionalCount = value => value === null || (Number.isInteger(value) && value >= 1 && value <= 999);
       const habits = parsed.data.habits.map(habit => {
         if (!habit || typeof habit.id !== "string" || !/^[a-f0-9-]{1,40}$/.test(habit.id) || ids.has(habit.id) ||
             typeof habit.name !== "string" || !habit.name.trim() || habit.name.length > 80 ||
-            !["binary", "counter"].includes(habit.mode) || !validOptionalCount(habit.limit) ||
-            !validOptionalCount(habit.goal) || typeof habit.color !== "string" || !hexColor.test(habit.color) ||
+            typeof habit.color !== "string" || !hexColor.test(habit.color) ||
             !Array.isArray(habit.entries)) invalid();
         ids.add(habit.id);
         const entries = habit.entries.map(entry => {
@@ -741,24 +666,21 @@
           return { day: entry.day, at: entry.at };
         });
         return {
-          id: habit.id, name: habit.name.trim(), mode: habit.mode,
-          limit: habit.limit, goal: habit.goal, color: habit.color.toLowerCase(), entries
+          id: habit.id, name: habit.name.trim(), color: habit.color.toLowerCase(), entries
         };
       });
       const settings = parsed.data.settings;
-      if (!settings || !chartStyles.includes(settings.style) || ![7, 30].includes(settings.range) ||
+      if (!settings || !validRange(settings.range) ||
           (settings.selectedId !== null && !ids.has(settings.selectedId))) invalid();
       const theme = settings.theme === undefined ? defaultTheme : settings.theme;
       const overviewDays = settings.overviewDays === undefined ? 30 : settings.overviewDays;
-      const overviewStyle = settings.overviewStyle === undefined ? "step" : settings.overviewStyle;
-      if (!validOverviewDays(overviewDays)) invalid();
-      if (!overviewStyles.includes(overviewStyle)) invalid();
+      if (!validRange(overviewDays)) invalid();
       if (!theme || typeof theme.background !== "string" || !hexColor.test(theme.background) ||
           typeof theme.accent !== "string" || !hexColor.test(theme.accent)) invalid();
       return {
         habits,
         settings: {
-          selectedId: settings.selectedId, style: settings.style, range: settings.range, overviewDays, overviewStyle,
+          selectedId: settings.selectedId, range: settings.range, overviewDays,
           theme: { background: theme.background.toLowerCase(), accent: theme.accent.toLowerCase() }
         }
       };
@@ -799,27 +721,28 @@
       }
     }
 
-    function announce(message) {
-      const liveRegion = get(screen === "habit" && activeHabit() ? "chart-message" : "app-status");
+    function announce(message, visible = false) {
+      const inDayEditor = get("day-dialog").open;
+      const liveRegion = get(inDayEditor ? "day-message" : !visible && screen === "habit" && activeHabit() ? "chart-message" : "app-status");
       liveRegion.textContent = message;
     }
 
     function clearMessages() {
       get("chart-message").textContent = "";
       get("app-status").textContent = "";
+      get("day-message").textContent = "";
     }
 
     function updateToday() {
       const date = localDay();
       if (date === today) return false;
-      if (selectedDay === today || selectedDay > date) selectedDay = date;
+      if ((selectedDay === today && !editingDayHabit) || selectedDay > date) selectedDay = date;
       today = date;
       return true;
     }
 
-    function changeEntry(day, delta) {
+    function changeEntry(day, delta, id = activeHabit()?.id) {
       updateToday();
-      const id = activeHabit()?.id;
       syncSavedData();
       const habit = data.habits.find(item => item.id === id);
       if (!habit) {
@@ -827,12 +750,7 @@
         return;
       }
       if (!validDay(day) || day > today) return;
-      const count = habit.entries.filter(entry => entry.day === day).length;
       if (delta > 0) {
-        if (!withinLimit(habit, count)) {
-          render();
-          return;
-        }
         const entry = { day, at: Date.now() };
         habit.entries.push(entry);
         undo = { habitId: habit.id, entry, index: habit.entries.length - 1, added: true };
@@ -848,7 +766,10 @@
       selectedDay = day;
       saveData();
       render();
-      announce((delta > 0 ? "Logged" : "Removed") + " a completion for " + shortDay.format(calendarDate(day)) + ".");
+      if (!get("day-dialog").open) {
+        const count = totalIn(habit, day, day);
+        announce((delta > 0 ? "Logged" : "Removed") + " a completion. " + number.format(count) + " on " + shortDay.format(calendarDate(day)) + ".");
+      }
     }
 
     function undoChange() {
@@ -871,68 +792,14 @@
       render();
       announce("Last change undone.");
     }
-    function cumulativeSeries(counts, days, start = 0) {
-      let value = start;
-      return days.map(day => {
-        value += counts.get(day) ?? 0;
-        return value;
-      });
-    }
-
-    function habitChart(habit, style, range, counts) {
-      if (style === "weekly") {
-        const start = weekStart(today);
-        const weeks = Array.from({ length: 10 }, (_, i) => moveDay(start, (i - 9) * 7));
-        const values = weeks.map(week => {
-          return daysEnding(moveDay(week, 6), 7).reduce((sum, day) => sum + (day <= today ? counts.get(day) ?? 0 : 0), 0);
-        });
-        return {
-          labels: weeks.map(day => shortDay.format(calendarDate(day))), bars: true,
-          series: [{ color: habit.color, values, start: 0 }], goal: habit.goal,
-          active: 9, note: "Completions per week · Mondays to Sundays",
-          summary: values.at(-1) + " completions this week" + (habit.goal ? " against a goal of " + habit.goal : "")
-        };
-      }
-      if (style === "periods") {
-        const year = calendarDate(today).getUTCFullYear();
-        const monthIndex = calendarDate(today).getUTCMonth();
-        const currentStart = today.slice(0, 7) + "-01";
-        const previousEnd = moveDay(currentStart, -1);
-        const previousStart = previousEnd.slice(0, 7) + "-01";
-        const currentLength = new Date(Date.UTC(year, monthIndex + 1, 0)).getUTCDate();
-        const previousLength = calendarDate(previousEnd).getUTCDate();
-        const length = Math.max(currentLength, previousLength);
-        const currentDays = daysEnding(today, calendarDate(today).getUTCDate());
-        const previousDays = daysEnding(previousEnd, previousLength);
-        const current = cumulativeSeries(counts, currentDays);
-        const previous = cumulativeSeries(counts, previousDays);
-        const previousColor = chartTheme.guide;
-        return {
-          labels: Array.from({ length }, (_, i) => String(i + 1)), active: current.length - 1,
-          series: [
-            { color: previousColor, values: previous, start: 0, dashes: [5, 5] },
-            { color: habit.color, values: current, start: 0 }
-          ],
-          legend: [
-            [shortMonth.format(calendarDate(currentStart)) + " to date", habit.color],
-            [shortMonth.format(calendarDate(previousStart)), previousColor]
-          ],
-          note: "Cumulative completions by day of month",
-          summary: current.at(-1) + " completions this month so far and " + previous.at(-1) + " last month"
-        };
-      }
-      const days = daysEnding(today, range);
-      const bars = style === "daily";
-      const dotted = style === "line";
-      const start = bars ? 0 : habit.entries.filter(entry => entry.day < days[0]).length;
-      const values = bars ? days.map(day => counts.get(day) ?? 0) : cumulativeSeries(counts, days, start);
+    function trackerChart(habit, count, day, maxPoints = 180) {
+      const span = chartSpan(count, maxPoints);
       return {
-        days, labels: days.map(day => shortDay.format(calendarDate(day))), bars, dotted,
-        active: days.indexOf(selectedDay), todayIndex: days.length - 1,
-        pendingToday: !counts.has(today), fill: !bars && !dotted,
-        series: [{ color: habit.color, values, start }],
-        note: (bars ? "Completions per day" : "Running total") + " · Select a date on the chart to edit",
-        summary: (bars ? totalIn(habit, days[0], today) + " completions in range" : values.at(-1) + " total completions")
+        ...span,
+        series: [chartTotals(habit, span, true)],
+        active: day && day >= span.start ? span.dates.findIndex(date => date >= day) : -1,
+        pendingToday: !habit.entries.some(entry => entry.day === today),
+        todayIndex: span.dates.length - 1
       };
     }
 
@@ -950,8 +817,8 @@
     function chartScale(model) {
       const seriesMax = model.series.reduce((max, series) => {
         return series.values.reduce((highest, value) => Math.max(highest, value), Math.max(max, series.start));
-      }, model.goal ?? 1);
-      const seriesMin = model.bars ? 0 : Math.min(...model.series.map(series => series.start));
+      }, 1);
+      const seriesMin = Math.min(...model.series.map(series => series.start));
       const gap = Math.max(1, (seriesMax - seriesMin) / 4);
       const magnitude = 10 ** Math.floor(Math.log10(gap));
       const tick = [1, 2, 5, 10].find(value => value * magnitude >= gap) * magnitude;
@@ -1002,25 +869,8 @@
         context.setLineDash([]);
       }
 
-      for (const [index, series] of model.series.entries()) {
-        if (model.bars) {
-          drawBars(context, series, cell, x, y, bottom, index, model.series.length);
-        } else if (model.dotted) {
-          drawDottedLine(context, series, cell, x, y, model.active);
-        } else {
-          drawSteps(context, series, cell, x, y, bottom, model.fill, model.active);
-        }
-      }
-      if (model.goal) {
-        const goalY = y(model.goal);
-        context.strokeStyle = chartTheme.goal;
-        context.setLineDash([5, 4]);
-        context.lineWidth = 1.5;
-        context.beginPath();
-        context.moveTo(left, goalY);
-        context.lineTo(right, goalY);
-        context.stroke();
-        context.setLineDash([]);
+      for (const series of model.series) {
+        drawDottedLine(context, series, cell, x, y, model.active);
       }
 
       const count = Math.min(labels, Math.max(2, Math.floor((width - left) / (labelSize * 6.5))));
@@ -1040,28 +890,6 @@
       const surfaces = [backdrop, chartTheme.highlight];
       if (surfaces.every(surface => contrast(color, surface) >= 3)) return null;
       return legibleShade(backdrop, surfaces, 4);
-    }
-
-    function drawBars(context, series, cell, x, y, bottom, seriesIndex = 0, seriesCount = 1) {
-      const groupWidth = cell * (seriesCount === 1 ? .65 : .84);
-      const lane = groupWidth / seriesCount;
-      const width = Math.min(24, lane * (seriesCount === 1 ? 1 : .8));
-      const offset = groupWidth * -.5 + (seriesIndex + .5) * lane;
-      const frame = seriesFrame(series.color);
-      for (const [index, value] of series.values.entries()) {
-        if (value <= 0) continue;
-        const left = x(index) + offset - width / 2;
-        const top = y(value);
-        const height = bottom - top;
-        context.fillStyle = series.color;
-        context.fillRect(left, top, width, height);
-        if (frame) {
-          const stroke = Math.min(1.2, width * .35, height * .35);
-          context.strokeStyle = frame;
-          context.lineWidth = stroke;
-          context.strokeRect(left + stroke / 2, top + stroke / 2, width - stroke, height - stroke);
-        }
-      }
     }
 
     function strokeSeries(context, series, frame) {
@@ -1089,8 +917,8 @@
       context.stroke();
     }
 
-    function drawDottedLine(context, series, cell, x, y, active) {
-      const frame = seriesFrame(series.color);
+    function drawDottedLine(context, series, cell, x, y, active, backdrop = chartTheme.paper) {
+      const frame = seriesFrame(series.color, backdrop);
       context.beginPath();
       context.moveTo(x(0), y(series.values[0]));
       for (let index = 1; index < series.values.length; index += 1) {
@@ -1100,37 +928,11 @@
 
       const radius = Math.min(4, cell * .28);
       for (const [index, value] of series.values.entries()) {
-        paintDot(context, series.color, frame ?? chartTheme.paper, x(index), y(value), index === active ? radius + 1.7 : radius);
+        paintDot(context, series.color, frame ?? backdrop, x(index), y(value), index === active ? radius + 1.7 : radius);
       }
     }
 
-    function drawSteps(context, series, cell, x, y, bottom, fill, active, backdrop = chartTheme.paper) {
-      if (!series.values.length) return;
-      const frame = seriesFrame(series.color, backdrop);
-      context.beginPath();
-      context.moveTo(x(0) - cell / 2, y(series.start));
-      let previous = series.start;
-      for (const [index, value] of series.values.entries()) {
-        context.lineTo(x(index), y(previous));
-        context.lineTo(x(index), y(value));
-        previous = value;
-      }
-      const end = x(series.values.length - 1) + cell / 2;
-      context.lineTo(end, y(previous));
-      strokeSeries(context, series, frame);
-      if (fill) {
-        context.lineTo(end, bottom);
-        context.lineTo(x(0) - cell / 2, bottom);
-        context.closePath();
-        context.fillStyle = series.color + "19";
-        context.fill();
-      }
-      if (active >= 0 && active < series.values.length) {
-        paintDot(context, series.color, frame ?? backdrop, x(active), y(series.values[active]), 4);
-      }
-    }
-
-    function drawMini(canvas, values, color, style = "step") {
+    function drawMini(canvas, values, color) {
       const { context, width, height } = resizeCanvas(canvas);
       if (width <= 0 || height <= 0) return;
       const max = Math.max(...values, 1);
@@ -1147,14 +949,7 @@
         context.lineTo(width, yy);
         context.stroke();
       }
-      const series = { color, values, start: 0 };
-      if (style === "daily") {
-        drawBars(context, series, cell, x, y, bottom);
-      } else if (style === "line") {
-        drawDottedLine(context, series, cell, x, y, -1);
-      } else {
-        drawSteps(context, series, cell, x, y, bottom, true, values.length - 1, chartTheme.raised);
-      }
+      drawDottedLine(context, { color, values }, cell, x, y, -1, chartTheme.raised);
     }
 
     function dot(color) {
@@ -1176,6 +971,19 @@
       legend.hidden = items.length === 0;
     }
 
+    function plotPointLimit(width) {
+      return Math.min(180, Math.max(1, Math.floor((width - 48) / 8)));
+    }
+
+    function drawHabitMinis(container, days) {
+      const canvases = container.querySelectorAll("canvas");
+      for (const [index, habit] of data.habits.entries()) {
+        const canvas = canvases[index];
+        const span = chartSpan(days, plotPointLimit(canvas.clientWidth + 32));
+        drawMini(canvas, chartTotals(habit, span).values, habit.color);
+      }
+    }
+
     function renderCharts() {
       const habit = activeHabit();
       chartSelection = null;
@@ -1183,51 +991,40 @@
         drawMini(get("preview"), [0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 4, 4, 4, 4, 5, 5, 6, 6, 6, 7, 7, 8], chartTheme.accent);
         return;
       }
-      const { overviewDays, overviewStyle } = data.settings;
+      const { overviewDays, range } = data.settings;
+      drawHabitMinis(get("habit-list"), overviewDays);
       if (screen === "overview") {
-        const span = overviewSpan(overviewDays);
-        const note = overviewStyle === "daily" && span.labels.length < span.days ? " Bars group nearby dates." : "";
-        get("overview-period").textContent = "Completions for " + spanLabel(overviewDays) + "." + note + " Select a habit to open its tracker.";
-        for (const [index, canvas] of [...get("overview-grid").querySelectorAll("canvas")].entries()) {
-          const overviewHabit = data.habits[index];
-          const values = overviewSeries(overviewBins(overviewHabit, span), overviewStyle);
-          drawMini(canvas, values, overviewHabit.color, overviewStyle);
-        }
+        get("overview-period").textContent = "Completions for " + spanLabel(overviewDays) + ". Select a habit to open its tracker.";
+        drawHabitMinis(get("overview-grid"), overviewDays);
         return;
       }
       if (screen === "compare") {
         const canvas = get("compare-chart");
         const { context, width, height } = resizeCanvas(canvas);
-        const bars = overviewStyle === "daily";
-        const slots = Math.min(180, Math.max(1, Math.floor((width - 44) / Math.max(6, data.habits.length * 2))));
-        const span = overviewSpan(overviewDays, bars ? slots : 180);
-        const series = data.habits.map((item, index) => {
-          const bins = overviewBins(item, span);
-          return {
-            color: item.color, values: overviewSeries(bins, overviewStyle), start: 0,
-            total: bins.reduce((sum, count) => sum + count, 0),
-            dashes: [[], [5, 3], [2, 3], [7, 3, 2, 3]][index % 4]
-          };
-        });
+        const span = chartSpan(overviewDays, plotPointLimit(width));
+        const series = data.habits.map((item, index) => ({
+          ...chartTotals(item, span),
+          dashes: [[], [5, 3], [2, 3], [7, 3, 2, 3]][index % 4]
+        }));
         const period = "Completions for " + spanLabel(overviewDays) + ".";
-        const grouped = bars && span.labels.length < span.days ? " Bars group nearby dates." : "";
-        get("compare-period").textContent = period + grouped;
-        drawChart(context, width, height, { labels: span.labels, series, bars, dotted: overviewStyle === "line" });
-        canvas.setAttribute("aria-label", period + grouped + " " + data.habits.map((item, index) => item.name + ": " + series[index].total).join(". "));
-        renderLegend("compare-legend", data.habits.map((item, index) => [item.name + " · " + number.format(series[index].total), item.color]));
+        const totals = series.map(line => line.values.at(-1));
+        get("compare-period").textContent = period;
+        drawChart(context, width, height, { labels: span.labels, series });
+        canvas.setAttribute("aria-label", period + " " + data.habits.map((item, index) => item.name + ": " + totals[index]).join(". "));
+        renderLegend("compare-legend", data.habits.map((item, index) => [item.name + " · " + number.format(totals[index]), item.color]));
         return;
       }
       const canvas = get("habit-chart");
       const { context, width, height } = resizeCanvas(canvas);
-      const model = habitChart(habit, data.settings.style, data.settings.range, dailyCounts(habit));
+      const model = trackerChart(habit, range, selectedDay, plotPointLimit(width));
       const bounds = drawChart(context, width, height, model);
-      chartSelection = model.days ? { days: model.days, bounds } : null;
-      canvas.classList.toggle("clickable", Boolean(chartSelection));
-      canvas.setAttribute("aria-label", habit.name + ". " + model.summary + ".");
-      get("chart-note").textContent = model.note;
-      const legend = model.legend ?? (model.goal ? [["Goal: " + number.format(model.goal) + " per week", chartTheme.goal]] : []);
-      renderLegend("chart-legend", legend);
+      const grouped = model.days > model.dates.length;
+      chartSelection = { dates: model.dates, bounds, grouped };
+      canvas.classList.add("clickable");
+      const completions = number.format(model.series[0].values.at(-1));
+      canvas.setAttribute("aria-label", habit.name + ". Cumulative completions through today: " + completions + ". Select a dot or use Edit day.");
     }
+
     function renderStorageStatus() {
       const warning = get("storage-warning");
       warning.hidden = !storageProblem;
@@ -1253,60 +1050,44 @@
         count.className = "habit-count";
         count.setAttribute("aria-hidden", "true");
         count.textContent = number.format(habit.entries.length);
-        button.append(dot(habit.color), name, count);
+        const heading = document.createElement("span");
+        heading.className = "habit-row-heading";
+        heading.append(dot(habit.color), name, count);
+        const canvas = document.createElement("canvas");
+        canvas.className = "habit-preview";
+        canvas.setAttribute("aria-hidden", "true");
+        button.append(heading, canvas);
         item.append(button);
         if (habit.id === focusedId) button.dataset.restoreFocus = "";
         return item;
       }));
       list.querySelector("[data-restore-focus]")?.focus({ preventScroll: true });
-      const picker = get("habit-select");
-      get("mobile-switch").hidden = !active || screen !== "habit";
-      picker.replaceChildren(...data.habits.map(habit => new Option(habit.name, habit.id)));
-      if (active) picker.value = active.id;
     }
 
     function renderHabit(habit) {
-      const counts = dailyCounts(habit);
-      const loggedMonth = [...counts.keys()].filter(date => date.startsWith(today.slice(0, 7)) && date <= today).length;
-      const selectedCount = counts.get(selectedDay) ?? 0;
-      const todayCount = counts.get(today) ?? 0;
-      const selectedEntries = habit.entries.filter(entry => entry.day === selectedDay);
-      const limitDescription = habit.mode === "binary" ? "Once per day" :
-        habit.limit ? "Up to " + number.format(habit.limit) + " per day" : "Multiple per day";
-      const goalProgress = habit.goal ? " · Weekly goal " + number.format(totalIn(habit, weekStart(today), today)) + " / " + number.format(habit.goal) : "";
-      const loggedAt = selectedEntries.length ? shortTime.format(new Date(selectedEntries.at(-1).at)) : "";
-
       get("today-date").textContent = fullDay.format(calendarDate(today));
       get("habit-title").textContent = habit.name;
-      get("habit-meta").textContent = limitDescription + goalProgress;
-      get("metric-total").textContent = number.format(habit.entries.length);
-      get("metric-streak").textContent = number.format(currentStreak(counts));
-      get("metric-month").textContent = number.format(loggedMonth);
-      get("log-today").disabled = !withinLimit(habit, todayCount);
-      get("log-today").lastChild.textContent = withinLimit(habit, todayCount) ? " Log today" :
-        habit.mode === "binary" ? " Logged today" : " Daily limit reached";
-      get("chart-type").value = data.settings.style;
-      get("range-tabs").hidden = !["step", "line", "daily"].includes(data.settings.style);
-      for (const button of get("range-tabs").querySelectorAll("button")) {
-        button.setAttribute("aria-pressed", String(Number(button.dataset.range) === data.settings.range));
-      }
+      get("tracker-range").value = data.settings.range;
+      get("undo").disabled = !undo;
+    }
 
-      get("day-summary").textContent = selectedDay === today ? "Today" : fullDay.format(calendarDate(selectedDay));
-      const completionText = number.format(selectedCount) + (selectedCount === 1 ? " completion" : " completions");
-      get("day-note").textContent = completionText + (selectedDay === today && loggedAt ? " · Last logged at " + loggedAt : "");
-      get("day-panel").classList.toggle("today-open", selectedDay === today && todayCount === 0);
+    function renderDayEditor() {
+      const habit = data.habits.find(item => item.id === editingDayHabit);
+      if (!habit) return;
+      const count = totalIn(habit, selectedDay, selectedDay);
+      get("day-habit").textContent = habit.name;
+      get("day-summary").textContent = fullDay.format(calendarDate(selectedDay)) + " · " +
+        number.format(count) + (count === 1 ? " completion" : " completions");
       const date = get("log-date");
       date.max = today;
       date.value = selectedDay;
       get("previous-day").disabled = selectedDay <= "0001-01-01";
       get("next-day").disabled = selectedDay >= today;
-      get("remove-entry").disabled = selectedCount === 0;
-      get("add-entry").disabled = !withinLimit(habit, selectedCount);
-      get("undo").disabled = !undo;
+      get("remove-entry").disabled = count === 0;
     }
 
     function renderOverview() {
-      const span = overviewSpan(data.settings.overviewDays);
+      const span = chartSpan(data.settings.overviewDays);
       get("overview-grid").replaceChildren(...data.habits.map(habit => {
         const card = document.createElement("button");
         card.type = "button";
@@ -1332,7 +1113,7 @@
       get("empty-view").hidden = Boolean(habit);
       get("overview-range-form").hidden = !habit || screen === "habit";
       get("overview-range").value = data.settings.overviewDays;
-      get("overview-style").value = data.settings.overviewStyle;
+      get("export-image").hidden = !habit || screen !== "habit";
       for (const view of ["habit", "overview", "compare"]) get(view + "-view").hidden = !habit || screen !== view;
       for (const button of get("screen-tabs").querySelectorAll("button")) {
         button.setAttribute("aria-pressed", String(button.dataset.screen === (habit ? screen : "habit")));
@@ -1342,6 +1123,7 @@
       renderHabits(habit);
       if (habit && screen === "habit") renderHabit(habit);
       if (habit && screen === "overview") renderOverview();
+      if (get("day-dialog").open) renderDayEditor();
       renderCharts();
     }
 
@@ -1364,10 +1146,24 @@
       showHabit(id, focusTitle);
     }
 
+    function openDayEditor(day = selectedDay, grouped = false) {
+      const id = activeHabit()?.id;
+      updateToday();
+      if (syncSavedData()) render();
+      if (!data.habits.some(item => item.id === id)) return;
+      editingDayHabit = id;
+      selectedDay = validDay(day) && day <= today ? day : today;
+      renderDayEditor();
+      get("day-message").textContent = grouped ? "This dot ends a group of dates. Choose the exact date above." : "";
+      get("day-dialog").showModal();
+      renderCharts();
+    }
+
     function showDay(day) {
       if (!validDay(day) || day > today) return;
       selectedDay = day;
-      renderHabit(activeHabit());
+      get("day-message").textContent = "";
+      renderDayEditor();
       renderCharts();
     }
 
@@ -1419,12 +1215,8 @@
       get("delete-habit").hidden = !habit;
       get("name-input").setCustomValidity("");
       get("name-input").value = habit?.name ?? "";
-      get("mode-input").value = habit?.mode ?? "binary";
-      get("limit-input").value = habit?.limit ?? "";
-      get("goal-input").value = habit?.goal ?? "";
       const color = habit?.color ?? palette[data.habits.length % palette.length];
       fillColorPair("color-input", "hex-input", color);
-      syncLimitField();
       get("habit-dialog").showModal();
       get("name-input").select();
     }
@@ -1475,12 +1267,6 @@
       announce("Deleted “" + habit.name + "”.");
     }
 
-    function syncLimitField() {
-      const binary = get("mode-input").value === "binary";
-      get("limit-field").hidden = binary;
-      get("limit-input").disabled = binary;
-    }
-
     function saveHabitForm(event) {
       event.preventDefault();
       const nameInput = get("name-input");
@@ -1490,9 +1276,6 @@
         nameInput.reportValidity();
         return;
       }
-      const mode = get("mode-input").value;
-      const limit = mode === "counter" && get("limit-input").value !== "" ? get("limit-input").valueAsNumber : null;
-      const goal = get("goal-input").value === "" ? null : get("goal-input").valueAsNumber;
       const color = pickerColor(get("hex-input"));
       if (!color) return;
       const id = editingId;
@@ -1506,7 +1289,7 @@
         id: Array.from(crypto.getRandomValues(new Uint8Array(16)), byte => byte.toString(16).padStart(2, "0")).join(""),
         entries: []
       };
-      Object.assign(habit, { name, mode, limit, goal, color });
+      Object.assign(habit, { name, color });
       if (!existing) data.habits.push(habit);
       get("habit-dialog").close();
       showHabit(habit.id, !existing);
@@ -1528,7 +1311,7 @@
       if (syncSavedData()) render();
       const blob = new Blob([JSON.stringify(backupEnvelope(), null, 2)], { type: "application/json" });
       download(blob, "charting-habits-backup-" + today + ".json");
-      announce("Backup exported.");
+      announce("Backup exported.", true);
     }
 
     async function chooseBackup(event) {
@@ -1540,12 +1323,12 @@
         if (file.size > 32 * 1024 * 1024) throw new Error("Backup is too large.");
         backup = checkedBackup(await file.text());
       } catch (error) {
-        announce(error instanceof SyntaxError ? "Choose a valid Charting Habits backup file." : error.message);
+        announce(error instanceof SyntaxError ? "Choose a valid Charting Habits backup file." : error.message, true);
         return;
       }
       if (syncSavedData()) render();
       const { settings } = data;
-      const customSettings = settings.overviewDays !== 30 || settings.overviewStyle !== "step" || settings.theme.background !== defaultTheme.background ||
+      const customSettings = settings.range !== 30 || settings.overviewDays !== 30 || settings.theme.background !== defaultTheme.background ||
         settings.theme.accent !== defaultTheme.accent;
       if (!data.habits.length && !customSettings && !unreadableSave) {
         restoreBackup(backup);
@@ -1569,22 +1352,24 @@
       clearMessages();
       saveData();
       render();
-      announce("Backup restored.");
+      announce("Backup restored.", true);
     }
 
     function exportChart() {
-      const habit = activeHabit();
+      const id = activeHabit()?.id;
+      if (syncSavedData()) render();
+      const habit = data.habits.find(item => item.id === id);
       if (!habit) return;
+      get("data-menu").open = false;
+      get("data-menu").querySelector("summary").focus();
       const canvas = document.createElement("canvas");
       canvas.width = 1200;
       canvas.height = 676;
       const context = canvas.getContext("2d");
-      const style = data.settings.style === "line" ? "line" : "step";
-      const model = habitChart(habit, style, 30, dailyCounts(habit));
+      const model = trackerChart(habit, 30);
       const end = shortDay.format(calendarDate(today));
-      const start = shortDay.format(calendarDate(moveDay(today, -29)));
-      const completed = totalIn(habit, moveDay(today, -29), today);
-      model.active = -1;
+      const start = shortDay.format(calendarDate(model.start));
+      const completed = totalIn(habit, model.start, today);
       model.pendingToday = false;
       context.fillStyle = chartTheme.paper;
       context.fillRect(0, 0, canvas.width, canvas.height);
@@ -1603,7 +1388,7 @@
       drawChart(context, 1110, 423, model, 19);
       canvas.toBlob(blob => {
         if (!blob) {
-          announce("The chart image could not be created.");
+          announce("The chart image could not be created.", true);
           return;
         }
         download(blob, "charting-habits-" + today + ".png");
@@ -1631,6 +1416,10 @@
       }
       undo = null;
       if (!data.habits.length) screen = "habit";
+      if (editingDayHabit && !data.habits.some(habit => habit.id === editingDayHabit)) {
+        editingDayHabit = null;
+        get("day-dialog").close();
+      }
 
       const editor = get("habit-dialog");
       if (editor.open && editingId) {
@@ -1660,33 +1449,23 @@
     get("open-theme").addEventListener("click", openTheme);
     get("cancel-theme").addEventListener("click", () => get("theme-dialog").close());
     get("theme-form").addEventListener("submit", saveTheme);
-    get("overview-range-form").addEventListener("submit", event => {
-      event.preventDefault();
-      const input = get("overview-range");
-      const days = input.valueAsNumber;
-      if (!validOverviewDays(days)) return;
-      syncSavedData();
-      data.settings.overviewDays = days;
-      saveData();
-      render();
-    });
-    get("overview-style").addEventListener("change", event => {
-      const style = event.target.value;
-      if (!overviewStyles.includes(style)) return;
-      const range = get("overview-range");
-      const draftRange = range.value;
-      syncSavedData();
-      data.settings.overviewStyle = style;
-      saveData();
-      render();
-      range.value = draftRange;
-    });
+    for (const [field, setting] of [["tracker-range", "range"], ["overview-range", "overviewDays"]]) {
+      const input = get(field);
+      input.form.addEventListener("submit", event => {
+        event.preventDefault();
+        const days = input.valueAsNumber;
+        if (!validRange(days)) return;
+        syncSavedData();
+        data.settings[setting] = days;
+        saveData();
+        render();
+      });
+    }
     for (const button of document.querySelectorAll(".add-habit")) {
       button.addEventListener("click", () => openHabitForm());
     }
     get("edit-habit").addEventListener("click", () => openHabitForm(activeHabit()));
     get("name-input").addEventListener("input", event => event.target.setCustomValidity(""));
-    get("mode-input").addEventListener("change", syncLimitField);
     get("cancel-habit").addEventListener("click", () => get("habit-dialog").close());
     get("habit-form").addEventListener("submit", saveHabitForm);
     get("delete-habit").addEventListener("click", openHabitDelete);
@@ -1707,32 +1486,17 @@
       const button = event.target.closest("[data-habit]");
       if (button) selectHabit(button.dataset.habit, true);
     });
-    get("habit-select").addEventListener("change", event => selectHabit(event.target.value));
-    get("chart-type").addEventListener("change", event => {
-      const style = event.target.value;
-      syncSavedData();
-      data.settings.style = style;
-      saveData();
-      render();
-    });
-    get("range-tabs").addEventListener("click", event => {
-      const button = event.target.closest("[data-range]");
-      if (!button) return;
-      syncSavedData();
-      data.settings.range = Number(button.dataset.range);
-      saveData();
-      render();
-    });
+    get("open-edit-day").addEventListener("click", () => openDayEditor());
+    get("day-dialog").addEventListener("close", () => { editingDayHabit = null; });
     get("habit-chart").addEventListener("click", event => {
       if (!chartSelection) return;
       const rect = event.currentTarget.getBoundingClientRect();
-      const { bounds, days } = chartSelection;
+      const { bounds, dates, grouped } = chartSelection;
       const x = event.clientX - rect.left;
       const y = event.clientY - rect.top;
       if (x < bounds.left || x > bounds.right || y < bounds.top || y > bounds.bottom) return;
-      showDay(days[Math.min(days.length - 1, Math.floor((x - bounds.left) / bounds.cell))]);
+      openDayEditor(dates[Math.min(dates.length - 1, Math.floor((x - bounds.left) / bounds.cell))], grouped);
     });
-    get("log-date").min = "0001-01-01";
     get("log-date").addEventListener("change", event => {
       const date = event.target;
       if (!date.validity.valid || !validDay(date.value) || date.value > today) {
@@ -1748,8 +1512,8 @@
       updateToday();
       changeEntry(today, 1);
     });
-    get("add-entry").addEventListener("click", () => changeEntry(selectedDay, 1));
-    get("remove-entry").addEventListener("click", () => changeEntry(selectedDay, -1));
+    get("add-entry").addEventListener("click", () => changeEntry(selectedDay, 1, editingDayHabit));
+    get("remove-entry").addEventListener("click", () => changeEntry(selectedDay, -1, editingDayHabit));
     get("undo").addEventListener("click", undoChange);
     get("export-image").addEventListener("click", exportChart);
 

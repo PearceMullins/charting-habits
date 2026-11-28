@@ -6,21 +6,22 @@ Charting Habits is an offline habit tracker you can run from a single HTML file.
 
 [![Support on Patreon](docs/support-on-patreon.svg)](https://www.patreon.com/cw/PearceMullins)
 
-![Charting Habits showing a 30-day line chart with sample habits and a selected date](docs/tracker.png)
+![Charting Habits showing a 30-day chart with view tabs and habit mini charts on the right](docs/tracker.png)
 
 ## Get started
 
 1. Download the HTML file and open it in a modern browser. No account, server, or installation is needed.
-2. Select **New habit**. Choose one completion per day or a counter with an optional daily limit.
-3. Select **Log today** to record progress. Select an earlier date on the chart or use the date field to add or remove a completion. **Undo** reverses the last log change.
+2. Select **New habit**, enter a name, and choose a chart color.
+3. Select **Log today** to record a completion. Every click adds one. Select a chart dot or use **Edit day** to add or remove a completion for a specific date. **Undo** reverses the last log change.
 4. To remove a habit, open **Edit habit**, select **Delete habit**, and confirm. This removes that habit's completion history. Other habits keep their history.
 
 ## What you can do
 
-- **See progress.** Switch between a step line, a line with dots, daily bars, weekly bars, and monthly comparison. Track streaks, days logged this month, and progress toward a weekly goal.
-- **View habits together.** Use **Overview** for small charts or **Compare habits** for one combined chart. Both views share **Days shown** and **View chart style**, with step lines, lines with dots, and daily bars. In Compare, bars show habits side by side. On longer ranges, bars group nearby dates to fit the chart.
+- **See progress.** Each chart shows a connected line with dots. Set **Days shown** on Tracker to see more or less history. Long ranges can group days into dots. Use **Edit day** to choose an exact date.
+- **Switch habits.** Select a habit in the right column to open its tracker. Its mini chart shows completions for the same date range as Overview and Compare habits.
+- **View habits together.** Use the tabs above the habit list to open **Overview** or **Compare habits**. Those views and the mini charts share a **Days shown** setting separate from Tracker.
 - **Choose your colors.** The default theme is black and blue. Use **Theme** to change the background and accent, and set each habit's chart color in **Edit habit**. Use the color pickers or paste a hex code.
-- **Share a chart.** **Export chart** saves a 30-day PNG for the current habit.
+- **Share a chart.** Open **Data → Export chart** from Tracker to save a 30-day PNG for the current habit.
 
 ## Saving and backups
 
