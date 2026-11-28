@@ -109,7 +109,7 @@
       border-radius: 12px;
       box-shadow: 0 12px 30px #0009;
     }
-    .menu button { width: 100%; text-align: left; }
+    .menu .button { display: flex; align-items: center; width: 100%; text-align: left; text-decoration: none; }
     .workspace { width: min(1220px, calc(100% - 56px)); margin: 34px auto 64px; }
     .workspace-bar { display: flex; justify-content: flex-end; align-items: center; margin-bottom: 18px; }
     .workspace-tools { justify-content: flex-end; }
@@ -130,20 +130,43 @@
     }
     .dashboard { display: grid; grid-template-columns: minmax(0, 1fr) 228px; gap: 20px; align-items: start; }
     .content-column, .side-column { min-width: 0; }
-    .side-column { display: grid; gap: 12px; }
+    .side-column { display: flex; flex-direction: column; gap: 12px; max-height: var(--habit-panel-limit, none); }
+    .side-column > .segment { flex: none; }
+    .dashboard[data-screen="overview"] .side-column { position: sticky; top: 12px; }
     .surface { background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); }
-    .sidebar { padding: 18px 14px 14px; }
+    .sidebar { display: flex; flex-direction: column; min-height: 0; padding: 18px 14px 14px; }
+    .sidebar > :not(.habit-list) { flex: none; }
     .sidebar h2 { font-family: inherit; font-size: .96rem; font-weight: 700; letter-spacing: 0; margin: 0 7px 14px; }
-    .habit-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 5px; }
-    .habit-list button {
+    .habit-list {
+      list-style: none; padding: 0; margin: 0; min-height: 0; overflow: hidden auto;
+      display: flex; flex-direction: column; gap: 5px; overscroll-behavior-y: contain;
+      scrollbar-width: thin; scrollbar-color: var(--control-line) transparent;
+    }
+    .habit-list > li { position: relative; flex: none; }
+    .habit-choice {
       display: grid; grid-template-columns: minmax(0, 1fr); gap: 4px; width: 100%; min-height: 44px; padding: 8px 9px;
       border: 1px solid transparent; border-radius: 10px; background: transparent; text-align: left; color: var(--ink);
     }
-    .habit-row-heading { display: flex; align-items: baseline; gap: 7px; min-width: 0; }
+    .habit-row-heading { display: flex; align-items: baseline; gap: 7px; min-width: 0; min-height: 30px; padding-inline-end: 30px; }
     .habit-row-heading .dot { align-self: center; }
     .habit-preview { display: block; width: 100%; height: 34px; }
-    .habit-list button:hover { background: var(--raised); }
-    .habit-list button[aria-pressed="true"] { background: var(--accent-dark); color: var(--selected-ink); border-color: var(--control-line); font-weight: 660; }
+    .habit-choice:hover { background: var(--raised); }
+    .habit-choice[aria-pressed="true"] { background: var(--accent-dark); color: var(--selected-ink); border-color: var(--control-line); font-weight: 660; }
+    .habit-list button:focus-visible { outline-offset: -3px; }
+    .habit-grip {
+      position: absolute; top: 3px; right: 3px; width: 34px; min-height: 36px;
+      border: 1px solid transparent; border-radius: 6px; background: transparent; color: var(--muted);
+      cursor: grab; touch-action: none;
+    }
+    .habit-grip:hover, .habit-grip:focus-visible { color: var(--accent-readable); background: var(--raised); }
+    .habit-list.dragging .habit-grip { cursor: grabbing; }
+    .habit-list .drag-source { opacity: .48; }
+    .habit-list .drop-before::before, .habit-list .drop-last::after {
+      content: ""; position: absolute; z-index: 1; left: 0; right: 0; height: 2px;
+      background: var(--accent-readable); pointer-events: none;
+    }
+    .habit-list .drop-before::before { top: 0; }
+    .habit-list .drop-last::after { bottom: 0; }
     .habit-list button[aria-pressed="true"] .habit-count { color: var(--selected-ink); }
     .habit-list .habit-name { min-width: 0; overflow-wrap: anywhere; }
     .habit-list .habit-count { margin-left: auto; color: var(--muted); font: 600 .78rem "Segoe UI", sans-serif; }
@@ -233,10 +256,10 @@
       .sidebar h2 { margin: 0 3px 7px; font-size: .82rem; }
       .sidebar-note { margin-inline: 3px; font-size: .75rem; overflow-wrap: anywhere; }
       .sidebar .button { padding-inline: 5px; margin-top: 4px; font-size: .76rem; }
-      .habit-list button { padding: 6px 5px; border-radius: 7px; font-size: .76rem; }
-      .habit-row-heading { gap: 4px; }
-      .habit-row-heading .dot { width: 7px; height: 7px; }
-      .habit-list .habit-count { font-size: .65rem; }
+      .habit-choice { padding: 6px 5px; border-radius: 7px; font-size: .76rem; }
+      .habit-row-heading { gap: 4px; min-height: 37px; padding-inline-end: 26px; }
+      .habit-row-heading .dot, .habit-row-heading .habit-count { display: none; }
+      .habit-grip { top: 2px; right: 1px; width: 30px; min-height: 40px; }
       .habit-preview { height: 28px; }
       .hero { padding: 16px 11px 14px; align-items: flex-start; gap: 10px; }
       .hero h1 { font-size: clamp(1.65rem, 6vw, 2.5rem); }
@@ -278,6 +301,7 @@
             <button class="button quiet" id="export-image" type="button" hidden>Export chart</button>
             <button class="button quiet" id="export-backup" type="button">Export backup</button>
             <button class="button quiet" id="restore-backup" type="button">Restore backup</button>
+            <a class="button quiet" href="https://www.patreon.com/cw/PearceMullins" target="_blank" rel="noopener noreferrer">Support on Patreon</a>
           </div>
         </details>
         <input id="backup-file" type="file" accept=".json,application/json" hidden>
@@ -324,12 +348,11 @@
                 <input class="select" id="tracker-range" type="number" min="1" max="9007199254740991" step="1" inputmode="numeric" required>
                 <button class="button" type="submit">Apply</button>
               </form>
-              <button class="button quiet" type="button" id="open-edit-day">Edit day</button>
-              <button class="button quiet" type="button" id="undo" disabled>Undo</button>
             </div>
           </div>
           <p class="visually-hidden" id="chart-message" role="status"></p>
-          <div class="plot"><canvas class="plot-canvas" id="habit-chart" role="img"></canvas></div>
+          <p class="visually-hidden" id="chart-keyboard-hint">Select a dot to edit its date. With the keyboard, use the arrow keys to choose a dot and press Enter or Space to open it.</p>
+          <div class="plot"><canvas class="plot-canvas" id="habit-chart" role="button" tabindex="0" title="Select a dot to edit its date" aria-describedby="chart-keyboard-hint" aria-keyshortcuts="ArrowLeft ArrowRight Home End Enter Space"></canvas></div>
         </section>
         <form class="range-bar" id="overview-range-form" hidden>
           <label for="overview-range">Days shown</label>
@@ -361,6 +384,8 @@
         <section class="sidebar surface" aria-labelledby="habit-list-label">
           <h2 id="habit-list-label">Your habits</h2>
           <p class="sidebar-note" id="sidebar-note">Habits you create appear here.</p>
+          <p class="visually-hidden" id="habit-reorder-hint">Drag the handle to move a habit. With the keyboard, use Up, Down, Home or End.</p>
+          <p class="visually-hidden" id="habit-order-status" role="status"></p>
           <ul class="habit-list" id="habit-list"></ul>
           <button class="button quiet add-habit" type="button">+ Add habit</button>
         </section>
@@ -481,7 +506,7 @@
     let screen = "habit";
     let today = localDay();
     let selectedDay = today;
-    let undo = null;
+    let habitDrag = null;
     let storageProblem = "";
     let unreadableSave = false;
     let savedSnapshot = null;
@@ -751,17 +776,14 @@
       }
       if (!validDay(day) || day > today) return;
       if (delta > 0) {
-        const entry = { day, at: Date.now() };
-        habit.entries.push(entry);
-        undo = { habitId: habit.id, entry, index: habit.entries.length - 1, added: true };
+        habit.entries.push({ day, at: Date.now() });
       } else {
         const index = habit.entries.findLastIndex(entry => entry.day === day);
         if (index === -1) {
           render();
           return;
         }
-        const [entry] = habit.entries.splice(index, 1);
-        undo = { habitId: habit.id, entry, index, added: false };
+        habit.entries.splice(index, 1);
       }
       selectedDay = day;
       saveData();
@@ -772,32 +794,12 @@
       }
     }
 
-    function undoChange() {
-      if (syncSavedData()) {
-        render();
-        announce("Browser storage changed in another tab.");
-        return;
-      }
-      if (!undo) return;
-      const habit = data.habits.find(candidate => candidate.id === undo.habitId);
-      if (!habit) return;
-      if (undo.added) {
-        const index = habit.entries.indexOf(undo.entry);
-        if (index !== -1) habit.entries.splice(index, 1);
-      } else {
-        habit.entries.splice(undo.index, 0, undo.entry);
-      }
-      undo = null;
-      saveData();
-      render();
-      announce("Last change undone.");
-    }
     function trackerChart(habit, count, day, maxPoints = 180) {
       const span = chartSpan(count, maxPoints);
       return {
         ...span,
         series: [chartTotals(habit, span, true)],
-        active: day && day >= span.start ? span.dates.findIndex(date => date >= day) : -1,
+        active: day ? span.dates.findIndex(date => date >= (day >= span.start ? day : today)) : -1,
         pendingToday: !habit.entries.some(entry => entry.day === today),
         todayIndex: span.dates.length - 1
       };
@@ -883,7 +885,7 @@
         const halfLabel = context.measureText(label).width / 2;
         context.fillText(label, Math.min(width - halfLabel - 2, Math.max(halfLabel + 2, x(index))), bottom + labelSize * .75);
       }
-      return { left, right, top, bottom, cell };
+      return { x, y };
     }
 
     function seriesFrame(color, backdrop = chartTheme.paper) {
@@ -1017,12 +1019,15 @@
       const canvas = get("habit-chart");
       const { context, width, height } = resizeCanvas(canvas);
       const model = trackerChart(habit, range, selectedDay, plotPointLimit(width));
-      const bounds = drawChart(context, width, height, model);
+      const plot = drawChart(context, width, height, model);
       const grouped = model.days > model.dates.length;
-      chartSelection = { dates: model.dates, bounds, grouped };
+      const line = model.series[0];
+      const points = model.dates.map((day, index) => ({ day, x: plot.x(index), y: plot.y(line.values[index]) }));
+      chartSelection = { points, index: model.active, grouped };
       canvas.classList.add("clickable");
-      const completions = number.format(model.series[0].values.at(-1));
-      canvas.setAttribute("aria-label", habit.name + ". Cumulative completions through today: " + completions + ". Select a dot or use Edit day.");
+      const date = points[model.active]?.day ?? today;
+      canvas.setAttribute("aria-label", habit.name + " completion chart. " +
+        number.format(line.values.at(-1)) + " completions through today. Selected " + fullDay.format(calendarDate(date)) + ".");
     }
 
     function renderStorageStatus() {
@@ -1035,13 +1040,16 @@
 
     function renderHabits(active) {
       const list = get("habit-list");
-      const focusedId = list.contains(document.activeElement) ? document.activeElement.dataset.habit : null;
+      const focused = document.activeElement?.closest("#habit-list > li");
+      const gripFocused = document.activeElement?.classList.contains("habit-grip");
+      const scrollTop = list.scrollTop;
       get("sidebar-note").hidden = Boolean(active);
       list.replaceChildren(...data.habits.map(habit => {
         const item = document.createElement("li");
+        item.dataset.habit = habit.id;
         const button = document.createElement("button");
         button.type = "button";
-        button.dataset.habit = habit.id;
+        button.className = "habit-choice";
         button.setAttribute("aria-pressed", String(habit.id === active?.id));
         const name = document.createElement("span");
         name.className = "habit-name";
@@ -1057,10 +1065,19 @@
         canvas.className = "habit-preview";
         canvas.setAttribute("aria-hidden", "true");
         button.append(heading, canvas);
-        item.append(button);
-        if (habit.id === focusedId) button.dataset.restoreFocus = "";
+        const grip = document.createElement("button");
+        grip.type = "button";
+        grip.className = "habit-grip";
+        grip.textContent = "⠿";
+        grip.title = "Drag to reorder";
+        grip.setAttribute("aria-label", "Reorder " + habit.name);
+        grip.setAttribute("aria-describedby", "habit-reorder-hint");
+        grip.setAttribute("aria-keyshortcuts", "ArrowUp ArrowDown Home End");
+        item.append(button, grip);
+        if (habit.id === focused?.dataset.habit) (gripFocused ? grip : button).dataset.restoreFocus = "";
         return item;
       }));
+      list.scrollTop = scrollTop;
       list.querySelector("[data-restore-focus]")?.focus({ preventScroll: true });
     }
 
@@ -1068,7 +1085,6 @@
       get("today-date").textContent = fullDay.format(calendarDate(today));
       get("habit-title").textContent = habit.name;
       get("tracker-range").value = data.settings.range;
-      get("undo").disabled = !undo;
     }
 
     function renderDayEditor() {
@@ -1107,7 +1123,151 @@
       }));
     }
 
+    function syncPlotLayout() {
+      const dashboard = document.querySelector(".dashboard");
+      const rail = dashboard.querySelector(".side-column");
+      const content = dashboard.querySelector(".content-column").getBoundingClientRect();
+      dashboard.dataset.screen = screen;
+      let limit = content.height;
+      if (screen === "overview") {
+        const minimum = rail.offsetHeight - get("habit-list").offsetHeight + 44;
+        const available = window.innerHeight - Math.max(12, content.top) - 12;
+        limit = Math.min(limit, Math.max(minimum, available));
+      }
+      rail.style.setProperty("--habit-panel-limit", Math.max(0, Math.floor(limit)) + "px");
+      renderCharts();
+    }
+
+    function moveHabit(id, before) {
+      if (syncSavedData()) {
+        render();
+        get("habit-order-status").textContent = "The habit list changed. Try moving the habit again.";
+        return;
+      }
+      const from = data.habits.findIndex(habit => habit.id === id);
+      if (from < 0 || before === id) return;
+      const next = data.habits.filter(habit => habit.id !== id);
+      const to = before === null ? next.length : next.findIndex(habit => habit.id === before);
+      if (to < 0 || to === from) return;
+      const habit = data.habits[from];
+      next.splice(to, 0, habit);
+      data.habits = next;
+      saveData();
+      render();
+      const list = get("habit-list");
+      const row = list.children[to].getBoundingClientRect();
+      const viewport = list.getBoundingClientRect();
+      if (row.top < viewport.top) list.scrollTop += row.top - viewport.top;
+      else if (row.bottom > viewport.bottom) list.scrollTop += row.bottom - viewport.bottom;
+      get("habit-order-status").textContent = habit.name + " moved to position " + (to + 1) + " of " + next.length + ".";
+    }
+
+    function startHabitDrag(event) {
+      const grip = event.target.closest(".habit-grip");
+      if (!grip || !event.isPrimary || event.button !== 0 || habitDrag) return;
+      if (syncSavedData()) {
+        render();
+        return;
+      }
+      event.preventDefault();
+      grip.focus({ preventScroll: true });
+      const list = event.currentTarget;
+      list.setPointerCapture(event.pointerId);
+      habitDrag = {
+        pointerId: event.pointerId, row: grip.parentElement, startX: event.clientX, startY: event.clientY,
+        x: event.clientX, y: event.clientY, active: false, frame: 0
+      };
+    }
+
+    function insertionRow(drag) {
+      const rows = [...get("habit-list").children].filter(row => row !== drag.row);
+      const before = rows.find(row => {
+        const bounds = row.getBoundingClientRect();
+        return drag.y < bounds.top + bounds.height / 2;
+      });
+      return { before, marker: before ?? rows.at(-1) };
+    }
+
+    function updateDragPreview() {
+      const drag = habitDrag;
+      if (!drag?.active) return;
+      drag.frame = 0;
+      const list = get("habit-list");
+      const bounds = list.getBoundingClientRect();
+      const edge = Math.min(34, bounds.height / 3);
+      const offset = drag.y < bounds.top + edge ? drag.y - bounds.top - edge :
+        Math.max(0, drag.y - bounds.bottom + edge);
+      const beforeScroll = list.scrollTop;
+      if (drag.x >= bounds.left - 12 && drag.x <= bounds.right + 12 &&
+          drag.y >= bounds.top - 24 && drag.y <= bounds.bottom + 24) {
+        list.scrollTop += Math.max(-16, Math.min(16, offset / 2));
+      }
+      const { before, marker } = insertionRow(drag);
+      const className = before ? "drop-before" : "drop-last";
+      if (drag.marker !== marker || drag.markerClass !== className) {
+        drag.marker?.classList.remove(drag.markerClass);
+        marker?.classList.add(className);
+        drag.marker = marker;
+        drag.markerClass = className;
+      }
+      if (list.scrollTop !== beforeScroll) drag.frame = requestAnimationFrame(updateDragPreview);
+    }
+
+    function updateHabitDrag(event) {
+      const drag = habitDrag;
+      if (!drag || event.pointerId !== drag.pointerId) return;
+      drag.x = event.clientX;
+      drag.y = event.clientY;
+      if (!drag.active) {
+        if (Math.hypot(drag.x - drag.startX, drag.y - drag.startY) < 5) return;
+        drag.active = true;
+        drag.row.classList.add("drag-source");
+        event.currentTarget.classList.add("dragging");
+      }
+      if (!drag.frame) drag.frame = requestAnimationFrame(updateDragPreview);
+    }
+
+    function cancelHabitDrag() {
+      const drag = habitDrag;
+      if (!drag) return;
+      habitDrag = null;
+      cancelAnimationFrame(drag.frame);
+      const list = get("habit-list");
+      list.classList.remove("dragging");
+      drag.row.classList.remove("drag-source");
+      drag.marker?.classList.remove(drag.markerClass);
+      if (list.hasPointerCapture(drag.pointerId)) list.releasePointerCapture(drag.pointerId);
+    }
+
+    function finishHabitDrag(event) {
+      const drag = habitDrag;
+      if (!drag || event.pointerId !== drag.pointerId) return;
+      drag.y = event.clientY;
+      const bounds = event.currentTarget.getBoundingClientRect();
+      const inside = event.clientX >= bounds.left && event.clientX <= bounds.right &&
+        drag.y >= bounds.top && drag.y <= bounds.bottom;
+      const before = inside && drag.active ? insertionRow(drag).before?.dataset.habit ?? null : undefined;
+      cancelHabitDrag();
+      if (before !== undefined) moveHabit(drag.row.dataset.habit, before);
+    }
+
+    function reorderHabitByKey(event) {
+      const grip = event.target.closest(".habit-grip");
+      if (!grip || !["ArrowUp", "ArrowDown", "Home", "End"].includes(event.key)) return;
+      event.preventDefault();
+      const id = grip.parentElement.dataset.habit;
+      const from = data.habits.findIndex(habit => habit.id === id);
+      const last = data.habits.length - 1;
+      const to = {
+        ArrowUp: Math.max(0, from - 1), ArrowDown: Math.min(last, from + 1), Home: 0, End: last
+      }[event.key];
+      if (from < 0 || from === to) return;
+      const remaining = data.habits.filter(habit => habit.id !== id);
+      moveHabit(id, remaining[to]?.id ?? null);
+    }
+
     function render() {
+      cancelHabitDrag();
       applyTheme();
       const habit = activeHabit();
       get("empty-view").hidden = Boolean(habit);
@@ -1124,7 +1284,7 @@
       if (habit && screen === "habit") renderHabit(habit);
       if (habit && screen === "overview") renderOverview();
       if (get("day-dialog").open) renderDayEditor();
-      renderCharts();
+      syncPlotLayout();
     }
 
     function showHabit(id, focusTitle = false) {
@@ -1146,7 +1306,7 @@
       showHabit(id, focusTitle);
     }
 
-    function openDayEditor(day = selectedDay, grouped = false) {
+    function openDayEditor(day, grouped) {
       const id = activeHabit()?.id;
       updateToday();
       if (syncSavedData()) render();
@@ -1157,6 +1317,46 @@
       get("day-message").textContent = grouped ? "This dot ends a group of dates. Choose the exact date above." : "";
       get("day-dialog").showModal();
       renderCharts();
+    }
+
+    function openChartDot(event) {
+      if (!chartSelection) return;
+      const { points, index, grouped } = chartSelection;
+      if (event.detail === 0) {
+        openDayEditor(points[index < 0 ? points.length - 1 : index].day, grouped);
+        return;
+      }
+      const canvas = event.currentTarget;
+      const rect = canvas.getBoundingClientRect();
+      const x = event.clientX - rect.left;
+      const y = event.clientY - rect.top;
+      let nearest;
+      let distance = event.pointerType === "touch" ? 20 : 12;
+      for (const point of points) {
+        const delta = Math.hypot(point.x - x, point.y - y);
+        if (delta > distance) continue;
+        nearest = point;
+        distance = delta;
+      }
+      if (nearest) openDayEditor(nearest.day, grouped);
+    }
+
+    function navigateChartDots(event) {
+      if (!chartSelection || !["ArrowLeft", "ArrowRight", "Home", "End", "Enter", " "].includes(event.key)) return;
+      event.preventDefault();
+      const { points, index, grouped } = chartSelection;
+      const last = points.length - 1;
+      const current = index < 0 ? last : index;
+      if (event.key === "Enter" || event.key === " ") {
+        openDayEditor(points[current].day, grouped);
+        return;
+      }
+      const next = { ArrowLeft: Math.max(0, current - 1), ArrowRight: Math.min(last, current + 1), Home: 0, End: last }[event.key];
+      selectedDay = points[next].day;
+      renderCharts();
+      const count = totalIn(activeHabit(), selectedDay, selectedDay);
+      announce((grouped ? "Date group ending " : "") + fullDay.format(calendarDate(selectedDay)) + ". " +
+        number.format(count) + (count === 1 ? " completion on that date." : " completions on that date."));
     }
 
     function showDay(day) {
@@ -1253,7 +1453,6 @@
       if (wasSelected || !data.habits.length) {
         data.settings.selectedId = (data.habits[index] ?? data.habits[index - 1])?.id ?? null;
       }
-      if (undo?.habitId === id) undo = null;
       editingId = null;
       get("habit-dialog").close();
       screen = "habit";
@@ -1346,7 +1545,6 @@
     function restoreBackup(backup) {
       unreadableSave = false;
       data = backup;
-      undo = null;
       selectedDay = today;
       screen = "habit";
       clearMessages();
@@ -1404,6 +1602,7 @@
         return false;
       }
       if (raw === savedSnapshot) return false;
+      cancelHabitDrag();
       savedSnapshot = raw;
       try {
         data = raw === null ? emptyData() : checkedBackup(raw);
@@ -1414,7 +1613,6 @@
         storageProblem = "Saved data changed in another tab and could not be read. Your current view is kept.";
         return true;
       }
-      undo = null;
       if (!data.habits.length) screen = "habit";
       if (editingDayHabit && !data.habits.some(habit => habit.id === editingDayHabit)) {
         editingDayHabit = null;
@@ -1478,25 +1676,30 @@
       clearMessages();
       render();
     });
-    get("habit-list").addEventListener("click", event => {
-      const button = event.target.closest("[data-habit]");
-      if (button) selectHabit(button.dataset.habit);
+    const habitList = get("habit-list");
+    habitList.addEventListener("click", event => {
+      const button = event.target.closest(".habit-choice");
+      if (button) selectHabit(button.parentElement.dataset.habit);
+    });
+    habitList.addEventListener("pointerdown", startHabitDrag);
+    habitList.addEventListener("pointermove", updateHabitDrag);
+    habitList.addEventListener("pointerup", finishHabitDrag);
+    habitList.addEventListener("pointercancel", cancelHabitDrag);
+    habitList.addEventListener("lostpointercapture", cancelHabitDrag);
+    habitList.addEventListener("keydown", reorderHabitByKey);
+    window.addEventListener("blur", cancelHabitDrag);
+    window.addEventListener("keydown", event => {
+      if (event.key !== "Escape" || !habitDrag) return;
+      event.preventDefault();
+      cancelHabitDrag();
     });
     get("overview-grid").addEventListener("click", event => {
       const button = event.target.closest("[data-habit]");
       if (button) selectHabit(button.dataset.habit, true);
     });
-    get("open-edit-day").addEventListener("click", () => openDayEditor());
     get("day-dialog").addEventListener("close", () => { editingDayHabit = null; });
-    get("habit-chart").addEventListener("click", event => {
-      if (!chartSelection) return;
-      const rect = event.currentTarget.getBoundingClientRect();
-      const { bounds, dates, grouped } = chartSelection;
-      const x = event.clientX - rect.left;
-      const y = event.clientY - rect.top;
-      if (x < bounds.left || x > bounds.right || y < bounds.top || y > bounds.bottom) return;
-      openDayEditor(dates[Math.min(dates.length - 1, Math.floor((x - bounds.left) / bounds.cell))], grouped);
-    });
+    get("habit-chart").addEventListener("click", openChartDot);
+    get("habit-chart").addEventListener("keydown", navigateChartDots);
     get("log-date").addEventListener("change", event => {
       const date = event.target;
       if (!date.validity.valid || !validDay(date.value) || date.value > today) {
@@ -1514,7 +1717,6 @@
     });
     get("add-entry").addEventListener("click", () => changeEntry(selectedDay, 1, editingDayHabit));
     get("remove-entry").addEventListener("click", () => changeEntry(selectedDay, -1, editingDayHabit));
-    get("undo").addEventListener("click", undoChange);
     get("export-image").addEventListener("click", exportChart);
 
     const dataMenu = get("data-menu");
@@ -1545,7 +1747,10 @@
     function refreshDate() {
       if (updateToday()) render();
     }
-    window.addEventListener("resize", renderCharts);
+    const layoutObserver = new ResizeObserver(syncPlotLayout);
+    layoutObserver.observe(document.querySelector(".content-column"));
+    layoutObserver.observe(get("screen-tabs"));
+    window.addEventListener("resize", syncPlotLayout);
     window.addEventListener("focus", refreshDate);
     window.addEventListener("storage", refreshFromAnotherTab);
     document.addEventListener("visibilitychange", refreshDate);
