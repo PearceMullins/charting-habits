@@ -2,7 +2,9 @@
 
 Charting Habits is an offline habit tracker you can run from a single HTML file. Log a completion with one click. The chart rises when you make progress and stays flat on days you skip.
 
-[Download the app](https://github.com/PearceMullins/charting-habits/releases/latest/download/Charting-Habits.html) · [View the latest release](https://github.com/PearceMullins/charting-habits/releases/latest)
+[![Download Charting Habits](docs/download-charting-habits.svg)](https://github.com/PearceMullins/charting-habits/releases/latest/download/Charting-Habits.html)
+
+[View the latest release](https://github.com/PearceMullins/charting-habits/releases/latest)
 
 [![Support on Patreon](docs/support-on-patreon.svg)](https://www.patreon.com/cw/PearceMullins)
 
