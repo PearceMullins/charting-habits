@@ -6,7 +6,7 @@ Charting Habits is an offline habit tracker you can run from a single HTML file.
 
 [![Support on Patreon](docs/support-on-patreon.svg)](https://www.patreon.com/cw/PearceMullins)
 
-![Charting Habits showing a 30-day chart with view tabs and habit mini charts on the right](docs/tracker.png)
+![Charting Habits showing a 14-day chart with view tabs and three habit mini charts on the right](docs/tracker-with-mini-charts.png)
 
 ## Get started
 
